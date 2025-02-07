@@ -1,0 +1,18 @@
+{
+  "extends": "solhint:recommended",
+  "rules": {
+    "code-complexity": ["warn", 3],
+    "function-max-lines": ["warn", 23],
+    "interface-starts-with-i": "warn",
+    "private-vars-leading-underscore": "off",
+    "no-unused-vars": "error",
+    "no-unused-import": "error",
+    "no-global-import": "error",
+    "func-visibility": [
+      "warn",
+      {
+        "ignoreConstructors": true
+      }
+    ]
+  }
+}

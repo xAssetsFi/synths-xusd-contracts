@@ -1,0 +1,3 @@
+forge fmt
+npm run prettier
+forge test

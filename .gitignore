@@ -1,0 +1,38 @@
+# Compiler files
+cache/
+/out/*
+
+!/out/Pool.sol
+/out/Pool.sol/Pool.json
+!/out/PoolDataProvider.sol
+/out/PoolDataProvider.sol/PoolDataProvider.json
+!/out/Exchanger.sol
+/out/Exchanger.sol/Exchanger.json
+!/out/SynthDataProvider.sol
+/out/SynthDataProvider.sol/SynthDataProvider.json
+!/out/Provider.sol
+/out/Provider.sol/Provider.json
+!/out/OracleAdapter.sol
+/out/OracleAdapter.sol/OracleAdapter.json
+!/out/DebtShares.sol
+/out/DebtShares.sol/DebtShares.json
+
+
+# Ignores development broadcast logs
+!/broadcast
+/broadcast/*/31337/
+/broadcast/**/dry-run/
+
+# Dotenv file
+.env
+
+# Dependencies
+dependencies/
+node_modules/
+
+# MacOS
+.DS_Store
+
+# Misc
+playground/
+package-lock.json
