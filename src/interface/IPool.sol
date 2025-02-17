@@ -255,6 +255,7 @@ interface IPool {
     event LoanFeeSet(uint256 fee);
     event StabilityFeeSet(uint256 fee);
     event CooldownPeriodSet(uint256 period);
+
     /* ======== Errors ======== */
 
     error HealthFactorTooLow(uint256 healthFactor, uint256 minHealthFactor);
@@ -266,4 +267,6 @@ interface IPool {
     error LiquidationAmountTooHigh(uint256 amount, uint256 maxAmount);
     error NotEnoughCollateral(uint256 required, uint256 available);
     error Cooldown();
+    error LiquidationDeductionsTooHigh();
+    error LiquidationRatioTooLow();
 }

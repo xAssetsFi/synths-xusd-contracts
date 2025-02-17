@@ -31,6 +31,8 @@ abstract contract Calculations is State {
         noZeroAddress(_feeReceiver)
         noZeroAddress(_debtShares)
         validInterface(_debtShares, type(IDebtShares).interfaceId)
+        validateLiquidationRatio
+        validateLiquidationDeductions
     {
         collateralRatio = params.collateralRatio;
         liquidationRatio = params.liquidationRatio;
@@ -113,27 +115,26 @@ abstract contract Calculations is State {
         shares = Math.mulDiv(assets, WAD * WAD, pricePerShare() * xusdPrecision);
     }
 
-    function calculateDeductionsWhileLiquidation(address token, uint256 xusdAmount)
+    function calculateDeductionsWhileLiquidation(address collateralToken, uint256 xusdAmount)
         public
         view
         returns (uint256 base, uint256 bonus, uint256 penalty)
     {
-        uint256 tokenDecimalsDelta = 10 ** (18 - IERC20Metadata(token).decimals());
+        uint256 tokenDecimalsDelta = 10 ** (18 - IERC20Metadata(collateralToken).decimals());
 
         IOracleAdapter oracle = provider().oracle();
 
-        uint256 collateralPrice = oracle.getPrice(token);
+        uint256 collateralPrice = oracle.getPrice(collateralToken);
         uint256 oraclePrecision = oracle.precision();
 
         // amount in collateral token, equivalent to amountXUSDToRepay
         base = Math.mulDiv(xusdAmount, oraclePrecision, collateralPrice) / tokenDecimalsDelta;
 
         // bonus for liquidator in collateral token
-        bonus = Math.mulDiv(base, liquidationBonusPercentagePoint, tokenDecimalsDelta) / PRECISION;
+        bonus = Math.mulDiv(base, liquidationBonusPercentagePoint, PRECISION);
 
         // penalty to platform due liquidation in collateral token
-        penalty =
-            Math.mulDiv(base, liquidationPenaltyPercentagePoint, tokenDecimalsDelta) / PRECISION;
+        penalty = Math.mulDiv(base, liquidationPenaltyPercentagePoint, PRECISION);
     }
 
     function calculateStabilityFee(address positionOwner)
@@ -154,5 +155,24 @@ abstract contract Calculations is State {
         stabilityFeeShares = Math.mulDiv(
             debtShares.balanceOf(positionOwner), stabilityFee * passedTime, 365 days * PRECISION
         );
+    }
+
+    modifier validateLiquidationRatio() {
+        _;
+
+        if (liquidationRatio < PRECISION) {
+            revert LiquidationRatioTooLow();
+        }
+    }
+
+    modifier validateLiquidationDeductions() {
+        _;
+
+        uint32 totalLiquidationDeductions =
+            liquidationBonusPercentagePoint + liquidationPenaltyPercentagePoint;
+
+        if (totalLiquidationDeductions > (liquidationRatio - PRECISION) / 2) {
+            revert LiquidationDeductionsTooHigh();
+        }
     }
 }

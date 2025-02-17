@@ -23,13 +23,13 @@ contract SettersTest is Setup {
 
     function test_setPool() public {
         CalculationsInitParams memory params = CalculationsInitParams({
-            collateralRatio: 1,
-            liquidationRatio: 1,
-            liquidationPenaltyPercentagePoint: 1,
-            liquidationBonusPercentagePoint: 1,
-            loanFee: 1,
-            stabilityFee: 1,
-            cooldownPeriod: 1
+            collateralRatio: 30000,
+            liquidationRatio: 12000,
+            liquidationPenaltyPercentagePoint: 500,
+            liquidationBonusPercentagePoint: 500,
+            loanFee: 100,
+            stabilityFee: 100,
+            cooldownPeriod: 3 minutes
         });
 
         Pool newPool = _deployPool(

@@ -36,7 +36,7 @@ contract PoolLiquidateTest is PoolSetup {
 
         pool.supply(address(wxfi), amount);
 
-        diaOracle.setValue("USDC/USD", uint128(3.5e7), uint128(block.timestamp));
+        diaOracle.setValue("USDC/USD", uint128(3.95e7), uint128(block.timestamp));
 
         address[] memory users = new address[](1);
         users[0] = address(this);
