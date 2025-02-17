@@ -51,12 +51,12 @@ contract Setup is TestUtils, Deploy {
             _deployDebtShares(address(this), address(provider), "xAssets debt shares", "xDS");
 
         CalculationsInitParams memory params = CalculationsInitParams({
-            collateralRatio: 30000,
-            liquidationRatio: 12000,
-            liquidationPenaltyPercentagePoint: 500,
-            liquidationBonusPercentagePoint: 1000,
-            loanFee: 100,
-            stabilityFee: 100,
+            collateralRatio: 30000, // 300%
+            liquidationRatio: 12000, // 120%
+            liquidationPenaltyPercentagePoint: 500, // 5%
+            liquidationBonusPercentagePoint: 500, // 5%
+            loanFee: 100, // 1%
+            stabilityFee: 100, // 1%
             cooldownPeriod: 3 minutes
         });
 
@@ -106,7 +106,7 @@ contract Setup is TestUtils, Deploy {
         _diaOracle.setValue("WETH/USD", 2000 * p, uint128(block.timestamp));
         _diaOracle.setValue("USDC/USD", 1 * p, uint128(block.timestamp));
 
-        _diaOracle.setValue("XAU/USD", 1900 * p, uint128(block.timestamp));
+        _diaOracle.setValue("XAU/USD", 2000 * p, uint128(block.timestamp));
         _diaOracle.setValue("XLS/USD", 1000 * p, uint128(block.timestamp));
 
         _diaOracle.setValue("GWEI/USD", 12 * 1e9 * p, uint128(block.timestamp));
