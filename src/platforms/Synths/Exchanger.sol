@@ -27,6 +27,7 @@ contract Exchanger is IExchanger, UUPSProxy {
     mapping(address => bool) public isSynth;
 
     uint256 public swapNonce;
+    uint256 public constant MAX_PENDING_SETTLEMENT = 10;
 
     /**
      * @notice With each swap the user will receive less synthOut,
@@ -85,6 +86,10 @@ contract Exchanger is IExchanger, UUPSProxy {
         returns (uint256 amountOut)
     {
         if (msg.value != getSwapFeeForSettle()) revert InsufficientGasFee();
+
+        if (_settlements[receiver][synthOut].swaps.length + 1 == MAX_PENDING_SETTLEMENT) {
+            revert MaxPendingSettlementReached();
+        }
 
         amountIn = _chargeFee(synthIn, amountIn, msg.sender);
         amountOut = _previewSwap(synthIn, synthOut, amountIn);

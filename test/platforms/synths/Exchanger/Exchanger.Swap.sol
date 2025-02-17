@@ -44,4 +44,15 @@ contract ExchangerSwapTest is ExchangerSetup {
         assertGt(feeReceiverBalanceAfter, feeReceiverBalanceBefore);
         assertGt(debtSharesBalanceAfter, debtSharesBalanceBefore);
     }
+
+    function test_swap_maxPendingSettlementReached() public {
+        for (uint256 i = 0; i < exchanger.MAX_PENDING_SETTLEMENT() - 1; i++) {
+            _swap(address(xusd), address(gold), 1e4);
+        }
+
+        uint256 swapFee = exchanger.getSwapFeeForSettle();
+
+        vm.expectRevert(IExchanger.MaxPendingSettlementReached.selector);
+        exchanger.swap{value: swapFee}(address(xusd), address(gold), 1e4, address(this));
+    }
 }

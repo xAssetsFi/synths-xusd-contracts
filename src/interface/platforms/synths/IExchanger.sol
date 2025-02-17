@@ -155,6 +155,7 @@ interface IExchanger is IPlatform {
     error NoSwaps();
     error SettlementDelayNotOver();
     error InsufficientGasFee();
+    error MaxPendingSettlementReached();
 
     event SynthAdded(address indexed synth);
     event SynthRemoved(address indexed synth);
