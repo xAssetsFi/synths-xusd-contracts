@@ -145,7 +145,7 @@ contract Pool is WETHGateway {
     function setLiquidationRatio(uint32 ratio, uint64 duration)
         external
         onlyOwner
-        validateLiquidationRatio
+        greaterThanPrecision(ratio)
     {
         ratioAdjustments["liquidation"] = RatioAdjustment({
             targetRatio: ratio,
@@ -174,12 +174,12 @@ contract Pool is WETHGateway {
         emit LiquidationBonusPercentagePointSet(percentagePoint);
     }
 
-    function setLoanFee(uint32 fee) external onlyOwner {
+    function setLoanFee(uint32 fee) external onlyOwner lessThanPrecision(fee) {
         loanFee = fee;
         emit LoanFeeSet(fee);
     }
 
-    function setStabilityFee(uint32 fee) external onlyOwner {
+    function setStabilityFee(uint32 fee) external onlyOwner lessThanPrecision(fee) {
         stabilityFee = fee;
         emit StabilityFeeSet(fee);
     }

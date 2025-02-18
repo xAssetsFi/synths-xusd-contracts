@@ -300,22 +300,22 @@ contract Exchanger is IExchanger, UUPSImplementation {
         emit FinishSwapDelayChanged(_finishSwapDelay);
     }
 
-    function setSwapFee(uint256 _swapFee) external onlyOwner {
-        swapFee = _swapFee;
-        emit SwapFeeChanged(_swapFee);
-    }
-
     function setFeeReceiver(address _feeReceiver) external onlyOwner noZeroAddress(_feeReceiver) {
         feeReceiver = _feeReceiver;
         emit FeeReceiverChanged(_feeReceiver);
     }
 
-    function setBurntAtSwap(uint256 _burntAtSwap) external onlyOwner {
+    function setSwapFee(uint256 _swapFee) external onlyOwner validateFees {
+        swapFee = _swapFee;
+        emit SwapFeeChanged(_swapFee);
+    }
+
+    function setBurntAtSwap(uint256 _burntAtSwap) external onlyOwner validateFees {
         burntAtSwap = _burntAtSwap;
         emit BurntAtSwapChanged(_burntAtSwap);
     }
 
-    function setRewarderFee(uint256 _rewarderFee) external onlyOwner {
+    function setRewarderFee(uint256 _rewarderFee) external onlyOwner validateFees {
         rewarderFee = _rewarderFee;
         emit RewarderFeeChanged(_rewarderFee);
     }
@@ -327,5 +327,13 @@ contract Exchanger is IExchanger, UUPSImplementation {
     function _afterInitialize() internal override {
         _registerInterface(type(IPlatform).interfaceId);
         _registerInterface(type(IExchanger).interfaceId);
+    }
+
+    modifier validateFees() {
+        _;
+
+        if (swapFee + rewarderFee + burntAtSwap > PRECISION) {
+            revert FeesTooHigh();
+        }
     }
 }

@@ -162,4 +162,5 @@ interface IExchanger is IPlatform {
     error InsufficientGasFee();
     error MaxPendingSettlementReached();
     error SynthAlreadyExists();
+    error FeesTooHigh();
 }
