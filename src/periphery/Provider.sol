@@ -18,7 +18,11 @@ import {IExchanger} from "src/interface/platforms/synths/IExchanger.sol";
 import {IOracleAdapter} from "src/interface/IOracleAdapter.sol";
 import {IPlatform} from "src/interface/platforms/IPlatform.sol";
 
+import {ArrayLib} from "src/lib/ArrayLib.sol";
+
 contract Provider is IProvider, Base, PausableUpgradeable, OwnableUpgradeable, UUPSUpgradeable {
+    using ArrayLib for address[];
+
     address private _xusd;
     address private _pool;
     address private _oracle;
@@ -125,12 +129,34 @@ contract Provider is IProvider, Base, PausableUpgradeable, OwnableUpgradeable, U
         _unpause();
     }
 
+    function removePlatform(address platform) external onlyOwner {
+        _removePlatform(platform);
+    }
+
     /* ======== Internal ======== */
+
+    function _removePlatform(address platform) internal {
+        if (!isPlatform[platform]) revert PlatformNotFound();
+
+        isPlatform[platform] = false;
+
+        for (uint256 i = 0; i < _platforms.length; i++) {
+            if (address(_platforms[i]) == platform) {
+                _platforms[i] = _platforms[_platforms.length - 1];
+                _platforms.pop();
+                break;
+            }
+        }
+
+        emit PlatformRemoved(platform);
+    }
 
     function _addPlatform(address platform)
         internal
         validInterface(platform, type(IPlatform).interfaceId)
     {
+        if (isPlatform[platform]) revert PlatformAlreadyAdded();
+
         isPlatform[platform] = true;
         _platforms.push(IPlatform(platform));
 
