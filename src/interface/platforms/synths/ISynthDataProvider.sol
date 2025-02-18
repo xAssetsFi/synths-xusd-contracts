@@ -30,7 +30,7 @@ interface ISynthDataProvider {
 
     struct UserSynthData {
         uint256 balance;
-        IExchanger.Settlement settlement;
+        IExchanger.PendingSwap pendingSwap;
     }
 
     function aggregateSynthData(address user) external view returns (AggregateSynthData memory);

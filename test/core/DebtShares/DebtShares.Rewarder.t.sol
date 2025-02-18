@@ -10,6 +10,7 @@ contract DebtSharesRewarderTest is DebtSharesSetup {
 
         _supplyAndBorrow(amountToBorrow);
         _swap(address(xusd), address(tesla), amountToBorrow);
+        _finishSwap(address(this), address(tesla));
 
         skip(debtShares.DURATION());
 
@@ -32,6 +33,7 @@ contract DebtSharesRewarderTest is DebtSharesSetup {
 
         _supplyAndBorrow(amountToBorrow);
         _swap(address(xusd), address(tesla), amountToBorrow);
+        _finishSwap(address(this), address(tesla));
 
         skip(10 days);
 

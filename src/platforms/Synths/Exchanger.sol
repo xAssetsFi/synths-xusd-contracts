@@ -22,7 +22,7 @@ contract Exchanger is IExchanger, UUPSProxy {
 
     address[] private _synths;
 
-    mapping(address user => mapping(address synthOut => Settlement)) private _settlements;
+    mapping(address user => mapping(address synthOut => PendingSwap)) private _pendingSwaps;
 
     mapping(address => bool) public isSynth;
 
@@ -41,9 +41,9 @@ contract Exchanger is IExchanger, UUPSProxy {
     uint256 public swapFee;
     address public feeReceiver;
 
-    uint256 public settlementDelay;
+    uint256 public finishSwapDelay;
 
-    uint256 public settleFunctionGasCost;
+    uint256 public finishSwapGasCost;
 
     function initialize(
         address _owner,
@@ -51,7 +51,7 @@ contract Exchanger is IExchanger, UUPSProxy {
         uint256 _swapFee,
         uint256 _rewarderFee,
         uint256 _burntAtSwap,
-        uint256 _settlementDelay
+        uint256 _finishSwapDelay
     ) public initializer {
         __UUPSProxy_init(_owner, _provider);
         feeReceiver = _owner;
@@ -59,9 +59,9 @@ contract Exchanger is IExchanger, UUPSProxy {
         swapFee = _swapFee;
         burntAtSwap = _burntAtSwap;
         rewarderFee = _rewarderFee;
-        settlementDelay = _settlementDelay;
+        finishSwapDelay = _finishSwapDelay;
 
-        settleFunctionGasCost = 200000;
+        finishSwapGasCost = 200000;
 
         _afterInitialize();
     }
@@ -72,49 +72,39 @@ contract Exchanger is IExchanger, UUPSProxy {
         return _synths;
     }
 
-    function getSwapFeeForSettle() public view returns (uint256) {
-        return settleFunctionGasCost * block.basefee;
+    function getFinishSwapFee() public view returns (uint256) {
+        return finishSwapGasCost * block.basefee;
     }
 
-    function swap(address synthIn, address synthOut, uint256 amountIn, address receiver)
-        external
-        payable
-        noPaused
-        onlySynth(synthIn)
-        onlySynth(synthOut)
-        noZeroUint(amountIn)
-        returns (uint256 amountOut)
-    {
-        if (msg.value != getSwapFeeForSettle()) revert InsufficientGasFee();
+    function swap(
+        address synthIn,
+        address synthOut,
+        uint256 amountIn,
+        uint256 minAmountOut,
+        address receiver
+    ) external payable noPaused onlySynth(synthIn) onlySynth(synthOut) noZeroUint(amountIn) {
+        PendingSwap storage pendingSwap = _pendingSwaps[receiver][synthOut];
 
-        if (_settlements[receiver][synthOut].swaps.length + 1 == MAX_PENDING_SETTLEMENT) {
+        if (pendingSwap.swaps.length + 1 == MAX_PENDING_SETTLEMENT) {
             revert MaxPendingSettlementReached();
         }
 
-        amountIn = _chargeFee(synthIn, amountIn, msg.sender);
-        amountOut = _previewSwap(synthIn, synthOut, amountIn);
+        if (msg.value != getFinishSwapFee()) revert InsufficientGasFee();
 
-        Settlement storage settlement = _settlements[receiver][synthOut];
-        Swap memory swapData = Swap(swapNonce++, synthIn, synthOut, amountIn, amountOut);
-        settlement.settleReserve += msg.value;
-        settlement.swaps.push(swapData);
-        settlement.lastUpdate = block.timestamp;
+        ISynth(synthIn).safeTransferFrom(msg.sender, address(this), amountIn);
 
-        _swap(
-            swapData.synthIn,
-            swapData.synthOut,
-            swapData.amountIn,
-            swapData.amountOut,
-            msg.sender,
-            receiver
-        );
+        Swap memory swapData = Swap(swapNonce++, synthIn, synthOut, amountIn, minAmountOut);
 
-        emit Swapped(
+        pendingSwap.settleReserve += msg.value;
+        pendingSwap.swaps.push(swapData);
+        pendingSwap.lastUpdate = block.timestamp;
+
+        emit SwapStarted(
             swapData.nonce,
             swapData.synthIn,
             swapData.synthOut,
             swapData.amountIn,
-            swapData.amountOut,
+            swapData.minAmountOut,
             msg.sender,
             receiver
         );
@@ -132,22 +122,19 @@ contract Exchanger is IExchanger, UUPSProxy {
         ISynth(synthOut).mint(receiver, amountOut);
     }
 
-    function _chargeFee(address synthIn, uint256 amountIn, address owner)
-        internal
-        returns (uint256)
-    {
+    function _chargeFee(address synthIn, uint256 amountIn) internal returns (uint256) {
         (uint256 _swapFee, uint256 _rewarderFee, uint256 _burned) = _calcFee(amountIn);
 
-        if (_burned > 0) ISynth(synthIn).burn(owner, _burned);
+        if (_burned > 0) ISynth(synthIn).burn(address(this), _burned);
 
         if (_swapFee > 0) {
-            _chargeFeeInXUSD(synthIn, _swapFee, owner, feeReceiver);
+            _chargeFeeInXUSD(synthIn, _swapFee, feeReceiver);
         }
 
         if (_rewarderFee > 0) {
             IDebtShares debtShares = provider().pool().debtShares();
 
-            uint256 amountOut = _chargeFeeInXUSD(synthIn, _rewarderFee, owner, address(this));
+            uint256 amountOut = _chargeFeeInXUSD(synthIn, _rewarderFee, address(this));
 
             ISynth xusd = provider().xusd();
             xusd.approve(address(debtShares), amountOut);
@@ -157,7 +144,7 @@ contract Exchanger is IExchanger, UUPSProxy {
         return amountIn - (_swapFee + _rewarderFee + _burned);
     }
 
-    function _chargeFeeInXUSD(address synthIn, uint256 amountIn, address owner, address receiver)
+    function _chargeFeeInXUSD(address synthIn, uint256 amountIn, address receiver)
         internal
         returns (uint256 amountOut)
     {
@@ -165,10 +152,10 @@ contract Exchanger is IExchanger, UUPSProxy {
 
         if (synthIn != address(xusd)) {
             amountOut = _previewSwap(synthIn, address(xusd), amountIn);
-            _swap(synthIn, address(xusd), amountIn, amountOut, owner, receiver);
+            _swap(synthIn, address(xusd), amountIn, amountOut, address(this), receiver);
         } else {
             amountOut = amountIn;
-            xusd.safeTransferFrom(owner, receiver, amountOut);
+            xusd.safeTransfer(receiver, amountOut);
         }
     }
 
@@ -182,39 +169,42 @@ contract Exchanger is IExchanger, UUPSProxy {
         _burned = (amountIn * burntAtSwap) / PRECISION;
     }
 
-    function settle(address user, address synth, address settlementCompensationReceiver)
+    function finishSwap(address user, address synth, address settlementCompensationReceiver)
         external
         noPaused
         onlySynth(synth)
     {
-        Settlement memory settlement = _settlements[user][synth];
+        PendingSwap memory pendingSwap = _pendingSwaps[user][synth];
 
-        if (settlement.swaps.length == 0) revert NoSwaps();
+        if (pendingSwap.swaps.length == 0) revert NoSwaps();
 
-        if (block.timestamp < settlement.lastUpdate + settlementDelay) {
+        if (block.timestamp < pendingSwap.lastUpdate + finishSwapDelay) {
             revert SettlementDelayNotOver();
         }
 
-        delete _settlements[user][synth];
+        delete _pendingSwaps[user][synth];
 
-        for (uint256 i = 0; i < settlement.swaps.length; i++) {
-            Swap memory data = settlement.swaps[i];
+        for (uint256 i = 0; i < pendingSwap.swaps.length; i++) {
+            Swap memory data = pendingSwap.swaps[i];
 
-            uint256 settled = _previewSwap(data.synthIn, data.synthOut, data.amountIn);
+            uint256 amountIn = _chargeFee(data.synthIn, data.amountIn);
+            uint256 amountOut = _previewSwap(data.synthIn, data.synthOut, amountIn);
 
-            if (settled < data.amountOut) {
-                ISynth(data.synthOut).burn(user, data.amountOut - settled);
-            } else if (settled > data.amountOut) {
-                ISynth(data.synthOut).mint(user, settled - data.amountOut);
+            if (amountOut >= data.minAmountOut) {
+                _swap(data.synthIn, data.synthOut, amountIn, amountOut, address(this), user);
+                emit SwapFinished(
+                    data.nonce, data.synthIn, data.synthOut, amountOut, data.minAmountOut, user
+                );
+            } else {
+                ISynth(data.synthIn).safeTransfer(user, data.amountIn);
+                emit SwapFailed(
+                    data.nonce, data.synthIn, data.synthOut, amountOut, data.minAmountOut, user
+                );
             }
-
-            emit SwapSettled(
-                user, synth, data.nonce, data.synthIn, data.synthOut, data.amountIn, settled
-            );
         }
 
         (bool success,) =
-            payable(settlementCompensationReceiver).call{value: settlement.settleReserve}("");
+            payable(settlementCompensationReceiver).call{value: pendingSwap.settleReserve}("");
 
         if (!success) revert TransferFailed();
     }
@@ -256,17 +246,13 @@ contract Exchanger is IExchanger, UUPSProxy {
         amountOut = (amountIn * oracle.getPrice(synthIn)) / oracle.getPrice(synthOut);
     }
 
-    function getSettlement(address user, address synth)
+    function getPendingSwap(address user, address synth)
         external
         view
         onlySynth(synth)
-        returns (Settlement memory settlement)
+        returns (PendingSwap memory pendingSwap)
     {
-        settlement = _settlements[user][synth];
-    }
-
-    function isTransferable(address synth, address user) external view returns (bool) {
-        return _settlements[user][synth].swaps.length == 0;
+        pendingSwap = _pendingSwaps[user][synth];
     }
 
     /* ======== Utils ======== */
@@ -307,9 +293,9 @@ contract Exchanger is IExchanger, UUPSProxy {
         emit SynthRemoved(_synth);
     }
 
-    function setSettlementDelay(uint256 _settlementDelay) external onlyOwner {
-        settlementDelay = _settlementDelay;
-        emit SettlementDelayChanged(_settlementDelay);
+    function setFinishSwapDelay(uint256 _finishSwapDelay) external onlyOwner {
+        finishSwapDelay = _finishSwapDelay;
+        emit FinishSwapDelayChanged(_finishSwapDelay);
     }
 
     function setSwapFee(uint256 _swapFee) external onlyOwner {

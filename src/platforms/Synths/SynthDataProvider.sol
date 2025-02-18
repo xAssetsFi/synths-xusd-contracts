@@ -23,10 +23,10 @@ contract SynthDataProvider is ISynthDataProvider, UUPSProxy {
 
         data = AggregateSynthData(
             synthsData(user),
-            exchanger.getSwapFeeForSettle(),
-            exchanger.settleFunctionGasCost(),
+            exchanger.getFinishSwapFee(),
+            exchanger.finishSwapGasCost(),
             block.basefee,
-            exchanger.settlementDelay(),
+            exchanger.finishSwapDelay(),
             exchanger.burntAtSwap(),
             exchanger.rewarderFee(),
             exchanger.swapFee(),
@@ -63,7 +63,7 @@ contract SynthDataProvider is ISynthDataProvider, UUPSProxy {
         returns (UserSynthData memory data)
     {
         data = UserSynthData(
-            ISynth(synth).balanceOf(user), provider().exchanger().getSettlement(user, synth)
+            ISynth(synth).balanceOf(user), provider().exchanger().getPendingSwap(user, synth)
         );
     }
 

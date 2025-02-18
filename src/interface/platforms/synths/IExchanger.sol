@@ -10,7 +10,7 @@ interface IExchanger is IPlatform {
         address synthIn;
         address synthOut;
         uint256 amountIn;
-        uint256 amountOut;
+        uint256 minAmountOut;
     }
 
     /// @notice This is used to prevent a front-running attack before a oracle update
@@ -20,7 +20,7 @@ interface IExchanger is IPlatform {
     /// @notice When some one call the swap function, they will receive some amount of synthOut
     /// @notice When the settlement is triggered, the amount of synthOut will be recalculated based on the current exchange rate and the delta will be burned/minted on user account
     /// @notice If swaps are not empty, users can't transfer their synthOut until the settlement is triggered
-    struct Settlement {
+    struct PendingSwap {
         Swap[] swaps;
         uint256 lastUpdate;
         uint256 settleReserve;
@@ -30,13 +30,16 @@ interface IExchanger is IPlatform {
     /// @param synthIn The address of the synth to send
     /// @param synthOut The address of the synth to receive
     /// @param amountIn The amount of synthIn to swap
-    /// @return amountOut The amount of synthOut received
+    /// @param minAmountOut The minimum amount of synthOut received
     /// @dev User send some native token to cover the gas fee for the settle function
     /// @dev The amount of synthOut received is calculated based on the current exchange rate but can be changed after settlement
-    function swap(address synthIn, address synthOut, uint256 amountIn, address receiver)
-        external
-        payable
-        returns (uint256 amountOut);
+    function swap(
+        address synthIn,
+        address synthOut,
+        uint256 amountIn,
+        uint256 minAmountOut,
+        address receiver
+    ) external payable;
 
     /// @notice Preview the amount of synthOut received
     function previewSwap(address synthIn, address synthOut, uint256 amountIn)
@@ -51,16 +54,17 @@ interface IExchanger is IPlatform {
     /// @dev To prevent a front-running attack before a oracle update, user should call this function after swap to correct the amount of synthOut received
     /// @dev While settlement isn't done, user can't transfer their synthOut
     /// @dev This function can be called by anyone. Gas fee for calling this function is paid by the user who call swap function
-    function settle(address user, address synth, address settlementCompensationReceiver) external;
+    function finishSwap(address user, address synth, address settlementCompensationReceiver)
+        external;
 
-    /// @notice Get the settlement of a user for a specific synth
+    /// @notice Get the pending swap of a user for a specific synth
     /// @param user The address of the user
     /// @param synth The address of the synth
-    /// @return settlement The settlement of the user for the specific synth
-    function getSettlement(address user, address synth)
+    /// @return pendingSwap The pending swap of the user for the specific synth
+    function getPendingSwap(address user, address synth)
         external
         view
-        returns (Settlement memory settlement);
+        returns (PendingSwap memory pendingSwap);
 
     /// @notice Check if a synth is registered
     /// @param synth The address of the synth to check
@@ -70,15 +74,15 @@ interface IExchanger is IPlatform {
 
     /// @notice Get the swap fee for settle
     /// @return The amount of native token that is reserved to pay for user who will trigger the settlement
-    function getSwapFeeForSettle() external view returns (uint256);
+    function getFinishSwapFee() external view returns (uint256);
 
     /// @notice Get the gas cost for settle function
     /// @return The amount of gas that is used for settle function
-    function settleFunctionGasCost() external view returns (uint256);
+    function finishSwapGasCost() external view returns (uint256);
 
     /// @notice Get the settlement delay
     /// @return The delay time before the settlement can be triggered
-    function settlementDelay() external view returns (uint256);
+    function finishSwapDelay() external view returns (uint256);
 
     /// @notice Get the amount of synth burnt at swap
     /// @notice On each swap some amount will be burnt to decrease the supply of synth and decrease the total debt of the system
@@ -104,13 +108,6 @@ interface IExchanger is IPlatform {
     /// @return The list of synths
     function synths() external view returns (address[] memory);
 
-    /// @notice Check if a synth is transferable for a user
-    /// @param synth The address of the synth to check
-    /// @param user The address of the user to check
-    /// @return isTransferable True if the synth is transferable, false otherwise
-    /// @notice See the settlement struct for more details
-    function isTransferable(address synth, address user) external view returns (bool);
-
     /// @notice Create a new synth and call addNewSynth function
     /// @param implementation The address of the synth implementation
     /// @param owner The address of the owner of the synth
@@ -125,27 +122,34 @@ interface IExchanger is IPlatform {
 
     /* ======== Events ======== */
 
-    event SettlementDelayChanged(uint256 settlementDelay);
+    event FinishSwapDelayChanged(uint256 finishSwapDelay);
     event SwapFeeChanged(uint256 swapFee);
     event FeeReceiverChanged(address feeReceiver);
     event BurntAtSwapChanged(uint256 burntAtSwap);
     event RewarderFeeChanged(uint256 rewarderFee);
-    event SwapSettled(
-        address user,
-        address synth,
-        uint256 nonce,
-        address synthIn,
-        address synthOut,
-        uint256 amountOld,
-        uint256 amountNew
-    );
-    event Swapped(
+    event SwapStarted(
         uint256 nonce,
         address synthIn,
         address synthOut,
         uint256 amountIn,
-        uint256 amountOut,
+        uint256 minAmountOut,
         address owner,
+        address receiver
+    );
+    event SwapFinished(
+        uint256 nonce,
+        address synthIn,
+        address synthOut,
+        uint256 amountOut,
+        uint256 minAmountOut,
+        address receiver
+    );
+    event SwapFailed(
+        uint256 nonce,
+        address synthIn,
+        address synthOut,
+        uint256 amountOut,
+        uint256 minAmountOut,
         address receiver
     );
 

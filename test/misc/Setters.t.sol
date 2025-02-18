@@ -60,9 +60,9 @@ contract SettersTest is Setup {
 
     /* ======== EXCHANGER ======== */
 
-    function test_setSettlementDelay() public {
-        exchanger.setSettlementDelay(u32);
-        assertEq(exchanger.settlementDelay(), u32);
+    function test_setFinishSwapDelay() public {
+        exchanger.setFinishSwapDelay(u32);
+        assertEq(exchanger.finishSwapDelay(), u32);
     }
 
     function test_setSwapFee() public {
@@ -114,8 +114,8 @@ contract SettersTest is Setup {
     }
 
     function test_setLiquidationRatio() public {
-        pool.setLiquidationRatio(u32);
-        assertEq(pool.liquidationRatio(), u32);
+        pool.setLiquidationRatio(12000);
+        assertEq(pool.liquidationRatio(), 12000);
     }
 
     function test_setLiquidationPenaltyPercentagePoint() public {
