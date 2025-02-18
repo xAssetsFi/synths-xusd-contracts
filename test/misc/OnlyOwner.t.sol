@@ -132,12 +132,12 @@ contract OnlyOwnerTest is Setup {
 
     function test_setCollateralRatio_revertIfNotOwner() public {
         _expectRevert();
-        pool.setCollateralRatio(0);
+        pool.setCollateralRatio(0, 1 weeks);
     }
 
     function test_setLiquidationRatio_revertIfNotOwner() public {
         _expectRevert();
-        pool.setLiquidationRatio(0);
+        pool.setLiquidationRatio(0, 1 weeks);
     }
 
     function test_setLiquidationPenaltyPercentagePoint_revertIfNotOwner() public {

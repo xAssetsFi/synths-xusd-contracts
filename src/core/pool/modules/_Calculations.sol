@@ -34,8 +34,20 @@ abstract contract Calculations is State {
         validateLiquidationRatio
         validateLiquidationDeductions
     {
-        collateralRatio = params.collateralRatio;
-        liquidationRatio = params.liquidationRatio;
+        ratioAdjustments["collateral"] = RatioAdjustment({
+            targetRatio: params.collateralRatio,
+            startRatio: 0,
+            startTime: 0,
+            duration: 0
+        });
+
+        ratioAdjustments["liquidation"] = RatioAdjustment({
+            targetRatio: params.liquidationRatio,
+            startRatio: 0,
+            startTime: 0,
+            duration: 0
+        });
+
         stabilityFee = params.stabilityFee;
         loanFee = params.loanFee;
         cooldownPeriod = params.cooldownPeriod;
@@ -57,7 +69,9 @@ abstract contract Calculations is State {
 
         uint256 totalDebt = convertToAssets(shares);
 
-        hf = Math.mulDiv(totalUsdCollateralValue, WAD, (totalDebt * liquidationRatio) / PRECISION);
+        hf = Math.mulDiv(
+            totalUsdCollateralValue, WAD, (totalDebt * getCurrentLiquidationRatio()) / PRECISION
+        );
     }
 
     function totalPositionCollateralValue(CollateralData[] memory collaterals)
@@ -102,7 +116,7 @@ abstract contract Calculations is State {
     }
 
     function getMinHealthFactorForBorrow() public view returns (uint256 hf) {
-        hf = Math.mulDiv(collateralRatio, WAD, liquidationRatio);
+        hf = Math.mulDiv(getCurrentCollateralRatio(), WAD, getCurrentLiquidationRatio());
     }
 
     function convertToAssets(uint256 shares) public view returns (uint256 assets) {
@@ -157,10 +171,28 @@ abstract contract Calculations is State {
         );
     }
 
+    function getCurrentCollateralRatio() public view returns (uint32) {
+        return _getCurrentRatio("collateral");
+    }
+
+    function getCurrentLiquidationRatio() public view returns (uint32) {
+        return _getCurrentRatio("liquidation");
+    }
+
+    function _getCurrentRatio(bytes32 key) internal view returns (uint32) {
+        RatioAdjustment memory adjustment = ratioAdjustments[key];
+        if (block.timestamp >= adjustment.startTime + adjustment.duration) {
+            return adjustment.targetRatio;
+        }
+        uint256 elapsed = block.timestamp - adjustment.startTime;
+        uint256 ratioDiff = uint256(adjustment.targetRatio) - uint256(adjustment.startRatio);
+        return uint32(uint256(adjustment.startRatio) + (ratioDiff * elapsed) / adjustment.duration);
+    }
+
     modifier validateLiquidationRatio() {
         _;
 
-        if (liquidationRatio < PRECISION) {
+        if (getCurrentLiquidationRatio() < PRECISION) {
             revert LiquidationRatioTooLow();
         }
     }
@@ -171,7 +203,7 @@ abstract contract Calculations is State {
         uint32 totalLiquidationDeductions =
             liquidationBonusPercentagePoint + liquidationPenaltyPercentagePoint;
 
-        if (totalLiquidationDeductions > (liquidationRatio - PRECISION) / 2) {
+        if (totalLiquidationDeductions > (getCurrentLiquidationRatio() - PRECISION) / 2) {
             revert LiquidationDeductionsTooHigh();
         }
     }
