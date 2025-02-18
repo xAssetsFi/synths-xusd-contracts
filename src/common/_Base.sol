@@ -28,4 +28,14 @@ abstract contract Base is Errors, Initializable, ERC165Registry {
         if (amount == 0) revert ZeroAmount();
         _;
     }
+
+    modifier lessThanPrecision(uint256 value) {
+        if (value >= PRECISION) revert ValueTooHigh();
+        _;
+    }
+
+    modifier greaterThanPrecision(uint256 value) {
+        if (value <= PRECISION) revert ValueTooLow();
+        _;
+    }
 }

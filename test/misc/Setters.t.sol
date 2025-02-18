@@ -110,14 +110,14 @@ contract SettersTest is Setup {
 
     function test_setCollateralRatio() public {
         uint32 collateralRatioBefore = pool.getCurrentCollateralRatio();
-        uint32 collateralRatioAfter = 60000;
+        uint32 collateralRatioAfter = 20000;
 
         pool.setCollateralRatio(collateralRatioAfter, 1 weeks);
         skip(1 weeks / 2);
 
         assertEq(
             pool.getCurrentCollateralRatio(),
-            collateralRatioBefore + (collateralRatioAfter - collateralRatioBefore) / 2
+            collateralRatioBefore - (collateralRatioBefore - collateralRatioAfter) / 2
         );
 
         skip(1 weeks / 2);

@@ -31,8 +31,11 @@ abstract contract Calculations is State {
         noZeroAddress(_feeReceiver)
         noZeroAddress(_debtShares)
         validInterface(_debtShares, type(IDebtShares).interfaceId)
-        validateLiquidationRatio
         validateLiquidationDeductions
+        lessThanPrecision(params.loanFee)
+        lessThanPrecision(params.stabilityFee)
+        greaterThanPrecision(params.collateralRatio)
+        greaterThanPrecision(params.liquidationRatio)
     {
         ratioAdjustments["collateral"] = RatioAdjustment({
             targetRatio: params.collateralRatio,
@@ -172,28 +175,26 @@ abstract contract Calculations is State {
     }
 
     function getCurrentCollateralRatio() public view returns (uint32) {
-        return _getCurrentRatio("collateral");
+        return uint32(_getCurrentRatio("collateral"));
     }
 
     function getCurrentLiquidationRatio() public view returns (uint32) {
-        return _getCurrentRatio("liquidation");
+        return uint32(_getCurrentRatio("liquidation"));
     }
 
-    function _getCurrentRatio(bytes32 key) internal view returns (uint32) {
+    function _getCurrentRatio(bytes32 key) internal view returns (uint256) {
         RatioAdjustment memory adjustment = ratioAdjustments[key];
         if (block.timestamp >= adjustment.startTime + adjustment.duration) {
             return adjustment.targetRatio;
         }
         uint256 elapsed = block.timestamp - adjustment.startTime;
-        uint256 ratioDiff = uint256(adjustment.targetRatio) - uint256(adjustment.startRatio);
-        return uint32(uint256(adjustment.startRatio) + (ratioDiff * elapsed) / adjustment.duration);
-    }
-
-    modifier validateLiquidationRatio() {
-        _;
-
-        if (getCurrentLiquidationRatio() < PRECISION) {
-            revert LiquidationRatioTooLow();
+        uint256 ratioDiff;
+        if (adjustment.targetRatio > adjustment.startRatio) {
+            ratioDiff = uint256(adjustment.targetRatio) - uint256(adjustment.startRatio);
+            return uint256(adjustment.startRatio) + (ratioDiff * elapsed) / adjustment.duration;
+        } else {
+            ratioDiff = uint256(adjustment.startRatio) - uint256(adjustment.targetRatio);
+            return uint256(adjustment.startRatio) - (ratioDiff * elapsed) / adjustment.duration;
         }
     }
 

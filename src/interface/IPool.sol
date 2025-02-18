@@ -275,5 +275,4 @@ interface IPool {
     error NotEnoughCollateral(uint256 required, uint256 available);
     error Cooldown();
     error LiquidationDeductionsTooHigh();
-    error LiquidationRatioTooLow();
 }
