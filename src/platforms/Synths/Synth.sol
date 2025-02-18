@@ -6,9 +6,9 @@ import {ISynth} from "src/interface/platforms/synths/ISynth.sol";
 import {ERC20Upgradeable} from
     "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
-import {UUPSProxy} from "src/common/_UUPSProxy.sol";
+import {UUPSImplementation} from "src/common/_UUPSImplementation.sol";
 
-contract Synth is ISynth, UUPSProxy, ERC20Upgradeable {
+contract Synth is ISynth, UUPSImplementation, ERC20Upgradeable {
     function mint(address to, uint256 amount) external checkAccess noZeroUint(amount) {
         _mint(to, amount);
     }
@@ -23,7 +23,7 @@ contract Synth is ISynth, UUPSProxy, ERC20Upgradeable {
         string memory _name,
         string memory _symbol
     ) public initializer {
-        __UUPSProxy_init(_owner, _provider);
+        __UUPSImplementation_init(_owner, _provider);
         __ERC20_init(_name, _symbol);
         _afterInitialize();
     }

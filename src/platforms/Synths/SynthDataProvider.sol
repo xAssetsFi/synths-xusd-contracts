@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.20;
 
-import {UUPSProxy} from "src/common/_UUPSProxy.sol";
+import {UUPSImplementation} from "src/common/_UUPSImplementation.sol";
 
 import {ISynth} from "src/interface/platforms/synths/ISynth.sol";
 import {IPool} from "src/interface/IPool.sol";
@@ -11,7 +11,7 @@ import {IExchanger} from "src/interface/platforms/synths/IExchanger.sol";
 
 import {PoolArrayLib} from "src/lib/PoolArrayLib.sol";
 
-contract SynthDataProvider is ISynthDataProvider, UUPSProxy {
+contract SynthDataProvider is ISynthDataProvider, UUPSImplementation {
     using PoolArrayLib for IPool.CollateralData[];
 
     function aggregateSynthData(address user)

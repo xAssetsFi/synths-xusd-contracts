@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.20;
 
-import {UUPSProxy} from "src/common/_UUPSProxy.sol";
+import {UUPSImplementation} from "src/common/_UUPSImplementation.sol";
 
 import {IExchanger} from "src/interface/platforms/synths/IExchanger.sol";
 import {IOracleAdapter} from "src/interface/IOracleAdapter.sol";
@@ -15,7 +15,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 
 import {ArrayLib} from "src/lib/ArrayLib.sol";
 
-contract Exchanger is IExchanger, UUPSProxy {
+contract Exchanger is IExchanger, UUPSImplementation {
     using Clones for address;
     using SafeERC20 for ISynth;
     using ArrayLib for address[];
@@ -53,7 +53,7 @@ contract Exchanger is IExchanger, UUPSProxy {
         uint256 _burntAtSwap,
         uint256 _finishSwapDelay
     ) public initializer {
-        __UUPSProxy_init(_owner, _provider);
+        __UUPSImplementation_init(_owner, _provider);
         feeReceiver = _owner;
 
         swapFee = _swapFee;

@@ -18,11 +18,7 @@ import {IExchanger} from "src/interface/platforms/synths/IExchanger.sol";
 import {IOracleAdapter} from "src/interface/IOracleAdapter.sol";
 import {IPlatform} from "src/interface/platforms/IPlatform.sol";
 
-import {ArrayLib} from "src/lib/ArrayLib.sol";
-
 contract Provider is IProvider, Base, PausableUpgradeable, OwnableUpgradeable, UUPSUpgradeable {
-    using ArrayLib for address[];
-
     address private _xusd;
     address private _pool;
     address private _oracle;

@@ -2,13 +2,13 @@
 pragma solidity ^0.8.20;
 
 import {IDebtShares} from "src/interface/IDebtShares.sol";
-import {UUPSProxy} from "src/common/_UUPSProxy.sol";
+import {UUPSImplementation} from "src/common/_UUPSImplementation.sol";
 
 import {IPool} from "src/interface/IPool.sol";
 
 import {IWETH} from "src/interface/external/IWETH.sol";
 
-abstract contract State is UUPSProxy, IPool {
+abstract contract State is UUPSImplementation, IPool {
     IWETH public weth;
 
     IDebtShares public debtShares;

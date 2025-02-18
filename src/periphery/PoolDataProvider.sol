@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.20;
 
-import {UUPSProxy} from "src/common/_UUPSProxy.sol";
+import {UUPSImplementation} from "src/common/_UUPSImplementation.sol";
 
 import {IPoolDataProvider} from "src/interface/IPoolDataProvider.sol";
 import {IPool} from "src/interface/IPool.sol";
@@ -11,7 +11,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 
 import {PoolArrayLib} from "src/lib/PoolArrayLib.sol";
 
-contract PoolDataProvider is IPoolDataProvider, UUPSProxy {
+contract PoolDataProvider is IPoolDataProvider, UUPSImplementation {
     using PoolArrayLib for IPool.CollateralData[];
 
     function getAggregatedPoolData(address user)
