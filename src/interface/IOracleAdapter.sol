@@ -9,6 +9,8 @@ interface IOracleAdapter {
     /// @notice The price is scaled by precision()
     function getPrice(address token) external view returns (uint256);
 
+    function getPriceWithTimestamp(address token) external view returns (uint256, uint256);
+
     /// @notice Get the precision
     /// @return The precision equals to 1e18
     function precision() external view returns (uint256);

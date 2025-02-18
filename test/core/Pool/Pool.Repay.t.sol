@@ -77,7 +77,7 @@ contract PoolRepayTest is PoolSetup {
     }
 
     function test_stabilityFeeAccountInRepay() public {
-        skip(1 weeks);
+        _skipAndUpdateOraclePrice(1 weeks);
 
         uint256 stabilityFeeBefore = pool.calculateStabilityFee(address(this));
         uint256 debtSharesBefore = debtShares.balanceOf(address(this));

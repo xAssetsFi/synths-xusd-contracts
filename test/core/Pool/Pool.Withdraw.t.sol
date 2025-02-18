@@ -87,7 +87,7 @@ contract PoolWithdrawTest is PoolSetup {
     function test_stabilityFeeAccountInWithdraw() public {
         pool.borrow(1e18, address(this));
 
-        skip(1 weeks);
+        _skipAndUpdateOraclePrice(1 weeks);
 
         uint256 stabilityFeeBefore = pool.calculateStabilityFee(address(this));
         uint256 debtSharesBefore = debtShares.balanceOf(address(this));

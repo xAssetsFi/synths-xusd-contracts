@@ -36,8 +36,6 @@ contract DebtSharesRewarderMathTest is DebtSharesSetup {
         _swap(address(xusd), address(tesla), amountXUSD);
         _finishSwap(address(this), address(tesla));
 
-        console.log("balance rewarder", xusd.balanceOf(address(debtShares)));
-
         skip(period);
 
         uint256 earned = debtShares.earned(address(xusd), address(this));

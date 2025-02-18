@@ -5,7 +5,8 @@ import "./_OracleAdapter.Setup.sol";
 
 contract DiaOracleAdapterFallbackOracleTest is DiaOracleAdapterSetup {
     function test_getPrice_returnsPriceFromFallbackOracle() public {
-        DiaOracleMock _diaOracle = _setupDiaOracle();
+        DiaOracleMock _diaOracle = new DiaOracleMock();
+        _updateOraclePrice(_diaOracle);
         DiaOracleAdapter fallbackOracle = _createFallbackOracle(_diaOracle);
 
         diaOracle.setValue("WBTC/USD", 0, uint128(block.timestamp));
