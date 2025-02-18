@@ -10,7 +10,7 @@ import {CalculationsInitParams} from "./modules/_Calculations.sol";
 
 /// @notice Pool contract
 /// @dev Inheritance:
-/// Pool -> WETHGateway -> Position -> Calculations -> State -> UUPSProxy -> Base
+/// Pool -> WETHGateway -> Position -> Calculations -> State -> UUPSImplementation -> Base
 contract Pool is WETHGateway {
     function initialize(
         address _owner,
@@ -20,7 +20,7 @@ contract Pool is WETHGateway {
         CalculationsInitParams memory params
     ) public initializer {
         __Calculations_init(_owner, _debtShares, params);
-        __UUPSProxy_init(_owner, _provider);
+        __UUPSImplementation_init(_owner, _provider);
         __WETHGateway_init(_weth);
         _afterInitialize();
     }

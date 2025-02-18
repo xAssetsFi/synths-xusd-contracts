@@ -45,7 +45,7 @@ contract DebtShares is Rewarder {
         string memory _name,
         string memory _symbol
     ) public initializer {
-        __UUPSProxy_init(_owner, _provider);
+        __UUPSImplementation_init(_owner, _provider);
         __ERC20_init(_name, _symbol);
         stageDistributionStarted = uint32(block.timestamp);
         _afterInitialize();

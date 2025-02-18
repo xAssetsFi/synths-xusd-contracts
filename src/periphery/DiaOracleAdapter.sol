@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.20;
 
-import {UUPSProxy} from "src/common/_UUPSProxy.sol";
+import {UUPSImplementation} from "src/common/_UUPSImplementation.sol";
 
 import {IDiaOracleAdapter} from "src/interface/IDiaOracleAdapter.sol";
 import {IDIAOracleV2} from "src/interface/external/IDIAOracleV2.sol";
 import {IOracleAdapter} from "src/interface/IOracleAdapter.sol";
 
-contract DiaOracleAdapter is IDiaOracleAdapter, UUPSProxy {
+contract DiaOracleAdapter is IDiaOracleAdapter, UUPSImplementation {
     IDIAOracleV2 public diaOracle;
 
     IOracleAdapter public fallbackOracle;
@@ -17,7 +17,7 @@ contract DiaOracleAdapter is IDiaOracleAdapter, UUPSProxy {
     uint256 public constant PRICE_FRESHNESS = 12 hours;
 
     function initialize(address _owner, address _provider, address _diaOracle) public initializer {
-        __UUPSProxy_init(_owner, _provider);
+        __UUPSImplementation_init(_owner, _provider);
         diaOracle = IDIAOracleV2(_diaOracle);
         _afterInitialize();
     }

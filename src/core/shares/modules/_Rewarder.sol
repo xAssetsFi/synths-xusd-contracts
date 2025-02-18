@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.20;
 
-import {UUPSProxy} from "src/common/_UUPSProxy.sol";
+import {UUPSImplementation} from "src/common/_UUPSImplementation.sol";
 import {IDebtShares} from "src/interface/IDebtShares.sol";
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -16,7 +16,7 @@ import {ArrayLib} from "src/lib/ArrayLib.sol";
 
 /// @notice Rewarder is a contract that distributes rewards to debt shares holders
 /// this contract can be used for multiple reward tokens
-abstract contract Rewarder is Initializable, ERC20Upgradeable, UUPSProxy, IDebtShares {
+abstract contract Rewarder is Initializable, ERC20Upgradeable, UUPSImplementation, IDebtShares {
     using SafeERC20 for IERC20;
     using ArrayLib for address[];
 
