@@ -199,5 +199,33 @@ contract Setup is TestUtils, Deploy {
         return _user;
     }
 
-    // function
+    function _swap(address _tokenIn, address _tokenOut, uint256 _amountIn) internal {
+        _swap(_tokenIn, _tokenOut, _amountIn, 0);
+    }
+
+    function _swap(address _tokenIn, address _tokenOut, uint256 _amountIn, uint256 _minAmountOut)
+        internal
+    {
+        ERC20Token(_tokenIn).approve(address(exchanger), _amountIn);
+        exchanger.swap{value: exchanger.getFinishSwapFee()}(
+            _tokenIn, _tokenOut, _amountIn, _minAmountOut, address(this)
+        );
+    }
+
+    function _finishSwap(address _user, address _synthOut) internal {
+        skip(exchanger.finishSwapDelay());
+        exchanger.finishSwap(_user, _synthOut, address(777));
+    }
+
+    function _swapAndFinish(
+        address _tokenIn,
+        address _tokenOut,
+        uint256 _amountIn,
+        uint256 _minAmountOut
+    ) internal {
+        _swap(_tokenIn, _tokenOut, _amountIn, _minAmountOut);
+        _finishSwap(address(this), _tokenOut);
+    }
+
+    receive() external payable {}
 }

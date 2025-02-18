@@ -12,17 +12,4 @@ contract DebtSharesSetup is Setup {
     function _supplyAndBorrow(uint256 amountToBorrow) internal {
         _supplyAndBorrow(amountToBorrow, address(this));
     }
-
-    function _swap(address synthIn, address synthOut, uint256 amountIn, address receiver)
-        internal
-    {
-        xusd.approve(address(exchanger), type(uint256).max);
-        exchanger.swap{value: exchanger.getSwapFeeForSettle()}(
-            synthIn, synthOut, amountIn, receiver
-        );
-    }
-
-    function _swap(address synthIn, address synthOut, uint256 amountIn) internal {
-        _swap(synthIn, synthOut, amountIn, address(this));
-    }
 }

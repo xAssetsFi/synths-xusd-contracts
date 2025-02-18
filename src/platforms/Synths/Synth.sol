@@ -48,21 +48,6 @@ contract Synth is ISynth, UUPSProxy, ERC20Upgradeable {
         _;
     }
 
-    function _update(address from, address to, uint256 amount)
-        internal
-        override
-        isTransferable(from)
-    {
-        super._update(from, to, amount);
-    }
-
-    modifier isTransferable(address from) {
-        if (!provider().exchanger().isTransferable(address(this), from)) {
-            revert NotTransferable();
-        }
-        _;
-    }
-
     function initialize(address, address) public pure override {
         revert DeprecatedInitializer();
     }

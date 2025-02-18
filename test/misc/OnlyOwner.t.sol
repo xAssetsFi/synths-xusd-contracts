@@ -76,9 +76,9 @@ contract OnlyOwnerTest is Setup {
         exchanger.removeSynth(a);
     }
 
-    function test_setSettlementDelay_revertIfNotOwner() public {
+    function test_setFinishSwapDelay_revertIfNotOwner() public {
         _expectRevert();
-        exchanger.setSettlementDelay(u);
+        exchanger.setFinishSwapDelay(u);
     }
 
     function test_setSwapFee_revertIfNotOwner() public {

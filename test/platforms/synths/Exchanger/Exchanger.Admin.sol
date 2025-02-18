@@ -23,9 +23,9 @@ contract ExchangerAdminTest is ExchangerSetup {
 
     function test_setSettlementDelay() public {
         vm.expectEmit(true, true, true, true);
-        emit IExchanger.SettlementDelayChanged(newUint);
-        exchanger.setSettlementDelay(newUint);
-        assertEq(exchanger.settlementDelay(), newUint);
+        emit IExchanger.FinishSwapDelayChanged(newUint);
+        exchanger.setFinishSwapDelay(newUint);
+        assertEq(exchanger.finishSwapDelay(), newUint);
     }
 
     function test_setBurntAtSwap() public {

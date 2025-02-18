@@ -68,12 +68,12 @@ contract PausableTest is Setup {
 
     function test_swap_revertIfPaused() public {
         _expectRevert();
-        exchanger.swap(a, a, 0, a);
+        exchanger.swap(a, a, 0, 0, a);
     }
 
     function test_settle_revertIfPaused() public {
         _expectRevert();
-        exchanger.settle(a, a, a);
+        exchanger.finishSwap(a, a, a);
     }
 
     /* ======== INTERNAL ======== */
