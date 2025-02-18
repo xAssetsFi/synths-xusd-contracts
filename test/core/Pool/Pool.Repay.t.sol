@@ -27,6 +27,7 @@ contract PoolRepayTest is PoolSetup {
     function testFuzz_repay_notFullAmount(uint256 amount) public {
         vm.assume(amount > 0);
         vm.assume(amount <= amountSharesReceived);
+        pool.setStabilityFee(0);
 
         uint256 balanceSharesBefore = debtShares.balanceOf(address(this));
         uint256 balanceXUSDBefore = xusd.balanceOf(address(this));
@@ -41,6 +42,7 @@ contract PoolRepayTest is PoolSetup {
     }
 
     function test_repay_wholeAmount() public {
+        pool.setStabilityFee(0);
         pool.repay(amountSharesReceived);
 
         assertEq(xusd.balanceOf(address(this)), 0);

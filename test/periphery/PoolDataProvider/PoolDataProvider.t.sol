@@ -9,6 +9,8 @@ contract PoolDataProviderTest is PoolDataProviderSetup {
     function _afterSetup() internal override {
         super._afterSetup();
 
+        pool.setStabilityFee(0);
+
         pool.supply(address(usdc), amountSuppliedUSDC);
     }
 

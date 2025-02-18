@@ -34,9 +34,12 @@ contract PoolBorrowTest is PoolSetup {
     }
 
     function test_borrow_max() public {
+        pool.setStabilityFee(0);
+
         pool.borrow(poolDataProvider.maxXUSDBorrow(address(this)), address(this));
 
         assertEq(pool.getHealthFactor(address(this)), pool.getMinHealthFactorForBorrow());
+        assertEq(poolDataProvider.maxXUSDBorrow(address(this)), 0);
     }
 
     function test_cooldown() public {
@@ -88,12 +91,9 @@ contract PoolBorrowTest is PoolSetup {
         pool.borrow(amount, address(this));
         assertEq(debtShares.balanceOf(address(this)), amount);
 
-        uint256 stabilityFee = pool.calculateStabilityFee(address(this));
-        assertEq(stabilityFee, 0);
-
         _skipAndUpdateOraclePrice(1 weeks);
 
-        stabilityFee = pool.calculateStabilityFee(address(this));
+        uint256 stabilityFee = pool.calculateStabilityFee(address(this));
         assertGt(stabilityFee, 0);
 
         pool.borrow(amount, address(this));
