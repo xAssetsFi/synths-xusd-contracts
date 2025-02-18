@@ -34,8 +34,8 @@ contract PoolDataProvider is IPoolDataProvider, UUPSImplementation {
             pool.pricePerShare(),
             pool.debtShares().totalSupply(),
             pool.getMinHealthFactorForBorrow(),
-            pool.liquidationRatio(),
-            pool.collateralRatio(),
+            pool.getCurrentLiquidationRatio(),
+            pool.getCurrentCollateralRatio(),
             pool.cooldownPeriod(),
             pool.loanFee(),
             pool.stabilityFee(),
@@ -112,7 +112,7 @@ contract PoolDataProvider is IPoolDataProvider, UUPSImplementation {
             (
                 (
                     ((collateralValue * 10 ** provider().xusd().decimals()) * PRECISION)
-                        / pool.collateralRatio()
+                        / pool.getCurrentCollateralRatio()
                 )
             ) / WAD
         );
@@ -137,7 +137,7 @@ contract PoolDataProvider is IPoolDataProvider, UUPSImplementation {
         uint256 _totalCollateralValue = pool.totalPositionCollateralValue(position.collaterals);
 
         uint256 _totalXUSDDebt = pool.convertToAssets(pool.debtShares().balanceOf(user));
-        uint256 _collateralRatio = pool.collateralRatio();
+        uint256 _collateralRatio = pool.getCurrentCollateralRatio();
 
         if (_totalCollateralValue <= (_totalXUSDDebt * _collateralRatio) / PRECISION) return (0, 0);
 
@@ -177,7 +177,7 @@ contract PoolDataProvider is IPoolDataProvider, UUPSImplementation {
         uint256 xusdPrecision = 10 ** provider().xusd().decimals();
         uint256 oraclePrecision = oracle.precision();
 
-        uint256 liquidationRatio = pool.liquidationRatio();
+        uint256 liquidationRatio = pool.getCurrentLiquidationRatio();
 
         token = new address[](users.length);
         shares = new uint256[](users.length);

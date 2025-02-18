@@ -174,12 +174,12 @@ interface IPool {
     /// @notice Get the liquidation ratio of the protocol
     /// @return ratio The liquidation ratio of the protocol
     /// @notice When the collateral value < total debt * liquidation ratio, the position will be liquidated
-    function liquidationRatio() external view returns (uint32 ratio);
+    function getCurrentLiquidationRatio() external view returns (uint32 ratio);
 
     /// @notice Get the collateral ratio of the protocol
     /// @return ratio The collateral ratio of the protocol
     /// @notice After a borrow, the collateral value should be greater than total debt * collateral ratio
-    function collateralRatio() external view returns (uint32 ratio);
+    function getCurrentCollateralRatio() external view returns (uint32 ratio);
 
     /// @notice Get the liquidation bonus percentage point of the protocol
     /// @return ratio The liquidation bonus percentage point of the protocol
@@ -230,6 +230,13 @@ interface IPool {
     /// @param period The cooldown period in seconds
     function setCooldownPeriod(uint32 period) external;
 
+    struct RatioAdjustment {
+        uint32 targetRatio;
+        uint32 startRatio;
+        uint64 startTime;
+        uint64 duration;
+    }
+
     /* ======== Events ======== */
 
     event Supply(address indexed positionOwner, address indexed token, uint256 amount);
@@ -248,8 +255,8 @@ interface IPool {
 
     event CollateralTokenAdded(address token);
     event CollateralTokenRemoved(address token);
-    event CollateralRatioSet(uint256 ratio);
-    event LiquidationRatioSet(uint256 ratio);
+    event CollateralRatioAdjustmentStarted(uint256 ratio, uint256 duration);
+    event LiquidationRatioAdjustmentStarted(uint256 ratio, uint256 duration);
     event LiquidationPenaltyPercentagePointSet(uint256 percentagePoint);
     event LiquidationBonusPercentagePointSet(uint256 percentagePoint);
     event LoanFeeSet(uint256 fee);

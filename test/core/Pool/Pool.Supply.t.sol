@@ -63,7 +63,7 @@ contract PoolSupplyTest is PoolSetup {
         assumeValidSupplyAmount(amount, wxfi)
     {
         uint256 borrowAmount = (amount * WAD) / pool.getMinHealthFactorForBorrow()
-            / pool.liquidationRatio() / PRECISION;
+            / pool.getCurrentLiquidationRatio() / PRECISION;
 
         vm.assume(borrowAmount > fuzzingDust);
 

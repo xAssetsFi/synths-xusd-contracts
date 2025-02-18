@@ -132,14 +132,28 @@ contract Pool is WETHGateway {
         emit CollateralTokenRemoved(token);
     }
 
-    function setCollateralRatio(uint32 ratio) external onlyOwner {
-        collateralRatio = ratio;
-        emit CollateralRatioSet(ratio);
+    function setCollateralRatio(uint32 ratio, uint64 duration) external onlyOwner {
+        ratioAdjustments["collateral"] = RatioAdjustment({
+            targetRatio: ratio,
+            startRatio: getCurrentCollateralRatio(),
+            startTime: uint64(block.timestamp),
+            duration: duration
+        });
+        emit CollateralRatioAdjustmentStarted(ratio, duration);
     }
 
-    function setLiquidationRatio(uint32 ratio) external onlyOwner validateLiquidationRatio {
-        liquidationRatio = ratio;
-        emit LiquidationRatioSet(ratio);
+    function setLiquidationRatio(uint32 ratio, uint64 duration)
+        external
+        onlyOwner
+        validateLiquidationRatio
+    {
+        ratioAdjustments["liquidation"] = RatioAdjustment({
+            targetRatio: ratio,
+            startRatio: getCurrentLiquidationRatio(),
+            startTime: uint64(block.timestamp),
+            duration: duration
+        });
+        emit LiquidationRatioAdjustmentStarted(ratio, duration);
     }
 
     function setLiquidationPenaltyPercentagePoint(uint32 percentagePoint)

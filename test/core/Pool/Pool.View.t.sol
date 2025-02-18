@@ -5,11 +5,11 @@ import "./_Pool.Setup.sol";
 
 contract PoolViewTest is PoolSetup {
     function test_collateralRatio() public view {
-        assertEq(pool.collateralRatio(), 30000);
+        assertEq(pool.getCurrentCollateralRatio(), 30000);
     }
 
     function test_liquidationRatio() public view {
-        assertEq(pool.liquidationRatio(), 12000);
+        assertEq(pool.getCurrentLiquidationRatio(), 12000);
     }
 
     function test_liquidationPenaltyPercentagePoint() public view {

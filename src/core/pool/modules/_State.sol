@@ -15,9 +15,6 @@ abstract contract State is UUPSImplementation, IPool {
 
     address public feeReceiver;
 
-    uint32 public collateralRatio;
-    uint32 public liquidationRatio;
-
     uint32 public liquidationPenaltyPercentagePoint;
     uint32 public liquidationBonusPercentagePoint;
 
@@ -28,6 +25,8 @@ abstract contract State is UUPSImplementation, IPool {
     uint32 public cooldownPeriod;
 
     mapping(address user => Position) internal _positions;
+
+    mapping(bytes32 => RatioAdjustment) public ratioAdjustments;
 
     mapping(address token => bool isCollateral) public isCollateralToken;
     address[] internal _collateralTokens;

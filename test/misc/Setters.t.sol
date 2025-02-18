@@ -109,13 +109,37 @@ contract SettersTest is Setup {
     /* ======== POOL ======== */
 
     function test_setCollateralRatio() public {
-        pool.setCollateralRatio(u32);
-        assertEq(pool.collateralRatio(), u32);
+        uint32 collateralRatioBefore = pool.getCurrentCollateralRatio();
+        uint32 collateralRatioAfter = 60000;
+
+        pool.setCollateralRatio(collateralRatioAfter, 1 weeks);
+        skip(1 weeks / 2);
+
+        assertEq(
+            pool.getCurrentCollateralRatio(),
+            collateralRatioBefore + (collateralRatioAfter - collateralRatioBefore) / 2
+        );
+
+        skip(1 weeks / 2);
+
+        assertEq(pool.getCurrentCollateralRatio(), collateralRatioAfter);
     }
 
     function test_setLiquidationRatio() public {
-        pool.setLiquidationRatio(12000);
-        assertEq(pool.liquidationRatio(), 12000);
+        uint32 liquidationRatioBefore = pool.getCurrentLiquidationRatio();
+        uint32 liquidationRatioAfter = 24000;
+
+        pool.setLiquidationRatio(liquidationRatioAfter, 1 weeks);
+        skip(1 weeks / 2);
+
+        assertEq(
+            pool.getCurrentLiquidationRatio(),
+            liquidationRatioBefore + (liquidationRatioAfter - liquidationRatioBefore) / 2
+        );
+
+        skip(1 weeks / 2);
+
+        assertEq(pool.getCurrentLiquidationRatio(), liquidationRatioAfter);
     }
 
     function test_setLiquidationPenaltyPercentagePoint() public {

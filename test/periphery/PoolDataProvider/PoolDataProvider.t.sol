@@ -93,8 +93,8 @@ contract PoolDataProviderTest is PoolDataProviderSetup {
         assertEq(data.poolData.pps, pool.pricePerShare());
         assertEq(data.poolData.debtSharesBalance, debtShares.balanceOf(address(this)));
         assertEq(data.poolData.minHealthFactorForBorrow, pool.getMinHealthFactorForBorrow());
-        assertEq(data.poolData.liquidationRatio, pool.liquidationRatio());
-        assertEq(data.poolData.collateralRatio, pool.collateralRatio());
+        assertEq(data.poolData.liquidationRatio, pool.getCurrentLiquidationRatio());
+        assertEq(data.poolData.collateralRatio, pool.getCurrentCollateralRatio());
         assertEq(data.poolData.cooldownPeriod, pool.cooldownPeriod());
         assertEq(data.poolData.healthFactorPrecision, WAD);
         assertEq(data.poolData.ratioPrecision, PRECISION);
