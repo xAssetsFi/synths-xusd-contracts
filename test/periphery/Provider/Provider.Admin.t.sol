@@ -64,6 +64,11 @@ contract ProviderAdminTest is ProviderSetup {
         assertEq(exchanger.synths().length, synths.length);
         assertFalse(exchanger.isSynth(newAddress));
     }
+
+    function test_addPlatform() public {
+        vm.expectRevert(IProvider.PlatformAlreadyAdded.selector);
+        provider.setExchanger(address(exchanger));
+    }
 }
 
 contract Mock is ERC165Registry {
