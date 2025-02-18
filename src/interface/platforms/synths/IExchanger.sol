@@ -121,7 +121,8 @@ interface IExchanger is IPlatform {
     ) external returns (address);
 
     /* ======== Events ======== */
-
+    event SynthAdded(address indexed synth);
+    event SynthRemoved(address indexed synth);
     event FinishSwapDelayChanged(uint256 finishSwapDelay);
     event SwapFeeChanged(uint256 swapFee);
     event FeeReceiverChanged(address feeReceiver);
@@ -160,7 +161,5 @@ interface IExchanger is IPlatform {
     error SettlementDelayNotOver();
     error InsufficientGasFee();
     error MaxPendingSettlementReached();
-
-    event SynthAdded(address indexed synth);
-    event SynthRemoved(address indexed synth);
+    error SynthAlreadyExists();
 }

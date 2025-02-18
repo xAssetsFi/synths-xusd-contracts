@@ -282,6 +282,8 @@ contract Exchanger is IExchanger, UUPSProxy {
         noZeroAddress(_synth)
         validInterface(_synth, type(ISynth).interfaceId)
     {
+        if (isSynth[_synth]) revert SynthAlreadyExists();
+
         isSynth[_synth] = true;
         _synths.push(_synth);
         emit SynthAdded(_synth);
