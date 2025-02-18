@@ -135,7 +135,7 @@ contract PoolSupplyTest is PoolSetup {
         pool.supply(address(wxfi), 1000 ether);
         pool.borrow(borrowedAmount, address(this));
 
-        skip(1 weeks);
+        _skipAndUpdateOraclePrice(1 weeks);
 
         uint256 stabilityFeeBefore = pool.calculateStabilityFee(address(this));
         uint256 debtSharesBefore = debtShares.balanceOf(address(this));
@@ -153,7 +153,7 @@ contract PoolSupplyTest is PoolSetup {
 
     function test_stabilityFeeDoNotIncreaseIfZeroDebt() public {
         pool.supply(address(wxfi), 100 ether);
-        skip(1 weeks);
+        _skipAndUpdateOraclePrice(1 weeks);
 
         uint256 stabilityFeeBefore = pool.calculateStabilityFee(address(this));
 

@@ -7,12 +7,14 @@ import {IDiaOracleAdapter} from "src/interface/IDiaOracleAdapter.sol";
 import {IDIAOracleV2} from "src/interface/external/IDIAOracleV2.sol";
 import {IOracleAdapter} from "src/interface/IOracleAdapter.sol";
 
-contract DiaOracleAdapter is IDiaOracleAdapter, IOracleAdapter, UUPSProxy {
+contract DiaOracleAdapter is IDiaOracleAdapter, UUPSProxy {
     IDIAOracleV2 public diaOracle;
 
     IOracleAdapter public fallbackOracle;
 
     mapping(address token => string key) public keys;
+
+    uint256 public constant PRICE_FRESHNESS = 12 hours;
 
     function initialize(address _owner, address _provider, address _diaOracle) public initializer {
         __UUPSProxy_init(_owner, _provider);
@@ -22,25 +24,28 @@ contract DiaOracleAdapter is IDiaOracleAdapter, IOracleAdapter, UUPSProxy {
 
     /* ======== External Functions ======== */
 
-    function getPrice(address token) external view returns (uint256) {
-        if (token == address(provider().xusd())) return precision(); // xusd is always 1
+    function getPrice(address token) external view returns (uint256 price) {
+        (price,) = getPriceWithTimestamp(token);
+    }
+
+    function getPriceWithTimestamp(address token) public view returns (uint256, uint256) {
+        if (token == address(provider().xusd())) return (precision(), block.timestamp); // xusd is always 1
 
         string memory key = keys[token];
-        (uint128 price,) = diaOracle.getValue(key);
 
-        return _validatePrice(uint256(price), token);
-    }
+        (uint256 price, uint256 timestamp) = diaOracle.getValue(key);
 
-    function precision() public pure returns (uint256) {
-        return 1e8;
-    }
-
-    function _validatePrice(uint256 price, address token) internal view returns (uint256) {
-        if (price == 0) price = fallbackOracle.getPrice(token);
+        if (price == 0 || block.timestamp - timestamp > PRICE_FRESHNESS) {
+            (price, timestamp) = fallbackOracle.getPriceWithTimestamp(token);
+        }
 
         if (price == 0) revert ZeroPrice();
 
-        return price;
+        if (block.timestamp - timestamp > PRICE_FRESHNESS) {
+            revert PriceStale(block.timestamp, timestamp);
+        }
+
+        return (price, timestamp);
     }
 
     /* ======== Admin ======== */
@@ -62,6 +67,10 @@ contract DiaOracleAdapter is IDiaOracleAdapter, IOracleAdapter, UUPSProxy {
     {
         emit FallbackOracleChanged(address(fallbackOracle), fallbackOracle_);
         fallbackOracle = IOracleAdapter(fallbackOracle_);
+    }
+
+    function precision() public pure returns (uint256) {
+        return 1e8;
     }
 
     function _afterInitialize() internal override {

@@ -33,8 +33,6 @@ contract Upgrade is Script, Fork {
 
         SynthDataProvider.SynthData[] memory data =
             SynthDataProvider(synthDataProvider).synthsData(address(0x0));
-
-        console.log(data[0].name);
     }
 
     function upgradeExchanger() public {
@@ -55,8 +53,6 @@ contract Upgrade is Script, Fork {
         address poolDataProvider = fileUtils.readContractAddress(chainId, "poolDataProvider");
 
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
-
-        console.log(poolDataProvider);
 
         address newPoolDataProviderImpl = address(new PoolDataProvider());
 

@@ -11,12 +11,14 @@ contract PoolLiquidateTest is PoolSetup {
     uint256 amountBorrowed = 100 ether;
     uint256 receiverShares = 100 ether;
 
+    uint128 dePegUsdcPrice = 4e7 - 1;
+
     function _afterSetup() internal override {
         super._afterSetup();
 
         pool.supplyAndBorrow(address(usdc), amountSupplied, amountBorrowed, address(this));
 
-        diaOracle.setValue("USDC/USD", uint128(4e7 - 1), uint128(block.timestamp));
+        diaOracle.setValue("USDC/USD", dePegUsdcPrice, uint128(block.timestamp));
     }
 
     function testFuzz_liquidate(uint256 amount) public {
@@ -61,6 +63,8 @@ contract PoolLiquidateTest is PoolSetup {
 
     function test_stabilityFeeAccountInLiquidation() public {
         skip(1 weeks);
+        _updateOraclePrice();
+        diaOracle.setValue("USDC/USD", dePegUsdcPrice, uint128(block.timestamp));
 
         uint256 liquidationAmount = receiverShares / 2;
 

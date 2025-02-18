@@ -11,7 +11,5 @@ contract ReadWriteExample is Script {
         fileUtils.writeContractAddress(1, address(0x111), "newContract");
 
         address contractAddress = fileUtils.readContractAddress(1, "newContract");
-
-        console.log("contractAddress", contractAddress);
     }
 }

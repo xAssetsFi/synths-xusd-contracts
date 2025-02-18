@@ -41,7 +41,8 @@ contract Setup is TestUtils, Deploy {
     address user;
 
     function _setUp() internal override {
-        diaOracle = _setupDiaOracle();
+        diaOracle = new DiaOracleMock();
+        _updateOraclePrice();
 
         wxfi = new WETH();
 
@@ -97,10 +98,13 @@ contract Setup is TestUtils, Deploy {
         _labels();
     }
 
-    function _setupDiaOracle() internal returns (DiaOracleMock) {
+    function _updateOraclePrice() internal {
+        _updateOraclePrice(diaOracle);
+    }
+
+    function _updateOraclePrice(DiaOracleMock _diaOracle) internal {
         uint128 p = uint128(1e8);
 
-        DiaOracleMock _diaOracle = new DiaOracleMock();
         _diaOracle.setValue("XFI/USD", (75 * p) / 1e2, uint128(block.timestamp));
         _diaOracle.setValue("WBTC/USD", 63000 * p, uint128(block.timestamp));
         _diaOracle.setValue("WETH/USD", 2000 * p, uint128(block.timestamp));
@@ -108,10 +112,6 @@ contract Setup is TestUtils, Deploy {
 
         _diaOracle.setValue("XAU/USD", 2000 * p, uint128(block.timestamp));
         _diaOracle.setValue("XLS/USD", 1000 * p, uint128(block.timestamp));
-
-        _diaOracle.setValue("GWEI/USD", 12 * 1e9 * p, uint128(block.timestamp));
-
-        return _diaOracle;
     }
 
     function _setUpOracleAdapter(DiaOracleAdapter _oracleAdapter) internal {
@@ -225,6 +225,11 @@ contract Setup is TestUtils, Deploy {
     ) internal {
         _swap(_tokenIn, _tokenOut, _amountIn, _minAmountOut);
         _finishSwap(address(this), _tokenOut);
+    }
+
+    function _skipAndUpdateOraclePrice(uint256 period) internal {
+        skip(period);
+        _updateOraclePrice();
     }
 
     receive() external payable {}

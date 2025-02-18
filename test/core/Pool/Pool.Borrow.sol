@@ -48,6 +48,7 @@ contract PoolBorrowTest is PoolSetup {
         pool.repay(1e10);
 
         vm.warp(block.timestamp + 12 hours + 1);
+        _updateOraclePrice();
         pool.repay(1e10);
     }
 
@@ -72,7 +73,7 @@ contract PoolBorrowTest is PoolSetup {
         uint256 hfBefore = pool.getHealthFactor(address(this));
         uint256 stabilityFeeBefore = pool.calculateStabilityFee(address(this));
 
-        skip(1 weeks);
+        _skipAndUpdateOraclePrice(1 weeks);
 
         uint256 hfAfter = pool.getHealthFactor(address(this));
         uint256 stabilityFeeAfter = pool.calculateStabilityFee(address(this));
@@ -90,7 +91,7 @@ contract PoolBorrowTest is PoolSetup {
         uint256 stabilityFee = pool.calculateStabilityFee(address(this));
         assertEq(stabilityFee, 0);
 
-        skip(1 weeks);
+        _skipAndUpdateOraclePrice(1 weeks);
 
         stabilityFee = pool.calculateStabilityFee(address(this));
         assertGt(stabilityFee, 0);
