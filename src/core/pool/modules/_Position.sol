@@ -8,7 +8,7 @@ import {ISynth} from "src/interface/platforms/synths/ISynth.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import {PoolArrayLib} from "src/lib/PoolArrayLib.sol";
+import {PoolArrayLib, INDEX_NOT_FOUND} from "src/lib/PoolArrayLib.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 abstract contract Position is Calculations {
@@ -22,7 +22,7 @@ abstract contract Position is Calculations {
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         uint256 index = position.collaterals.indexOf(token);
 
-        if (index == type(uint256).max) {
+        if (index == INDEX_NOT_FOUND) {
             position.collaterals.push(CollateralData(token, amount));
         } else {
             position.collaterals[uint8(index)].amount += amount;
@@ -37,7 +37,7 @@ abstract contract Position is Calculations {
         Position storage position = _positions[msg.sender];
 
         uint256 index = position.collaterals.indexOf(token);
-        if (index == type(uint256).max) revert NotCollateralToken();
+        if (index == INDEX_NOT_FOUND) revert NotCollateralToken();
 
         CollateralData storage collateral = position.collaterals[uint8(index)];
 

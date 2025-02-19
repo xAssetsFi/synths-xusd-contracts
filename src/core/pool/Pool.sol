@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {IPool} from "src/interface/IPool.sol";
 import {WETHGateway} from "./modules/_WETHGateway.sol";
 
-import {ArrayLib} from "src/lib/ArrayLib.sol";
+import {ArrayLib, INDEX_NOT_FOUND} from "src/lib/ArrayLib.sol";
 
 import {CalculationsInitParams} from "./modules/_Calculations.sol";
 
@@ -72,7 +72,7 @@ contract Pool is WETHGateway {
 
         _repay(amountToRepay);
 
-        if (shares == type(uint256).max) {
+        if (shares == INDEX_NOT_FOUND) {
             Position memory position = _positions[msg.sender];
 
             for (uint256 i = 0; i < position.collaterals.length; i++) {
