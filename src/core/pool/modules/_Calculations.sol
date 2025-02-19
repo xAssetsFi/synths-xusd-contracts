@@ -124,12 +124,12 @@ abstract contract Calculations is State {
 
     function convertToAssets(uint256 shares) public view returns (uint256 assets) {
         uint256 xusdPrecision = 10 ** provider().xusd().decimals();
-        assets = Math.mulDiv(shares, pricePerShare() * xusdPrecision, WAD * WAD);
+        assets = Math.mulDiv(shares, pricePerShare() * xusdPrecision, WAD * WAD, Math.Rounding.Ceil);
     }
 
     function convertToShares(uint256 assets) public view returns (uint256 shares) {
         uint256 xusdPrecision = 10 ** provider().xusd().decimals();
-        shares = Math.mulDiv(assets, WAD * WAD, pricePerShare() * xusdPrecision);
+        shares = Math.mulDiv(assets, WAD * WAD, pricePerShare() * xusdPrecision, Math.Rounding.Ceil);
     }
 
     function calculateDeductionsWhileLiquidation(address collateralToken, uint256 xusdAmount)
