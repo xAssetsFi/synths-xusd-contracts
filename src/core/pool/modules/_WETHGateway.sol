@@ -34,7 +34,7 @@ abstract contract WETHGateway is Position, ReentrancyGuard {
         if (!success) revert TransferFailed();
     }
 
-    function supplyETHAndBorrow(uint256 borrowXusdAmount, address borrowTo)
+    function supplyETHAndBorrow(uint256 borrowXusdAmount, uint256 maxDebtShares, address borrowTo)
         public
         payable
         noPaused
@@ -43,7 +43,7 @@ abstract contract WETHGateway is Position, ReentrancyGuard {
     {
         _wrapETH(msg.value);
         _supply(address(weth), msg.value);
-        _borrow(borrowXusdAmount, borrowTo);
+        _borrow(borrowXusdAmount, maxDebtShares, borrowTo);
     }
 
     function _wrapETH(uint256 amount) internal {

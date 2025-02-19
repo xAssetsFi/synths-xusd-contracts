@@ -34,7 +34,9 @@ contract DeployForLiquidatorTests is DeployAppTestnet {
         USDC(usdc).mint(owner, 300 * tokenPrecision);
         USDC(usdc).approve(address(pool), 300 * tokenPrecision);
 
-        pool.supplyAndBorrow(address(usdc), 300 * tokenPrecision, 100 ether, owner);
+        pool.supplyAndBorrow(
+            address(usdc), 300 * tokenPrecision, 100 ether, type(uint256).max, owner
+        );
 
         diaOracle.setValue("USDC/USD", 6e7);
 

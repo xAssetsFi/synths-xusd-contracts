@@ -48,7 +48,7 @@ contract Pool is WETHGateway {
         _withdraw(token, amount, to);
     }
 
-    function borrow(uint256 xusdAmount, address to)
+    function borrow(uint256 xusdAmount, uint256 maxDebtShares, address to)
         public
         override
         nonReentrant
@@ -56,10 +56,10 @@ contract Pool is WETHGateway {
         isPosExist(msg.sender)
         chargeStabilityFee(msg.sender)
     {
-        _borrow(xusdAmount, to);
+        _borrow(xusdAmount, maxDebtShares, to);
     }
 
-    function repay(uint256 shares)
+    function repay(uint256 shares, uint256 maxXusdAmount)
         external
         nonReentrant
         noPaused
@@ -72,7 +72,7 @@ contract Pool is WETHGateway {
 
         if (shares > sharesBalance) amountToRepay = sharesBalance;
 
-        _repay(amountToRepay);
+        _repay(amountToRepay, maxXusdAmount);
 
         if (shares == INDEX_NOT_FOUND) {
             Position memory position = _positions[msg.sender];
@@ -83,13 +83,13 @@ contract Pool is WETHGateway {
         }
     }
 
-    function liquidate(address positionOwner, address token, uint256 shares, address to)
-        external
-        noPaused
-        isCollateral(token)
-        chargeStabilityFee(positionOwner)
-        nonReentrant
-    {
+    function liquidate(
+        address positionOwner,
+        address token,
+        uint256 minTokenAmount,
+        uint256 shares,
+        address to
+    ) external noPaused isCollateral(token) chargeStabilityFee(positionOwner) nonReentrant {
         if (getHealthFactor(positionOwner) >= WAD) revert PositionHealthy();
 
         uint256 positionShares = debtShares.balanceOf(positionOwner);
@@ -98,17 +98,18 @@ contract Pool is WETHGateway {
             revert LiquidationAmountTooHigh(shares, positionShares / 2);
         }
 
-        _liquidate(positionOwner, token, shares, to);
+        _liquidate(positionOwner, token, minTokenAmount, shares, to);
     }
 
     function supplyAndBorrow(
         address token,
         uint256 supplyAmount,
         uint256 borrowXusdAmount,
+        uint256 maxDebtShares,
         address borrowTo
     ) external noPaused isCollateral(token) nonReentrant chargeStabilityFee(msg.sender) {
         _supply(token, supplyAmount);
-        _borrow(borrowXusdAmount, borrowTo);
+        _borrow(borrowXusdAmount, maxDebtShares, borrowTo);
     }
 
     function getPosition(address user) external view isPosExist(user) returns (Position memory) {

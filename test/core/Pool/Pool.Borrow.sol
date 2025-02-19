@@ -25,7 +25,7 @@ contract PoolBorrowTest is PoolSetup {
         assertNotEq(targetShares, 0);
 
         assertEq(xusd.balanceOf(address(this)), 0);
-        pool.borrow(amount, address(this));
+        pool.borrow(amount, targetShares, address(this));
         assertEq(xusd.balanceOf(address(this)), amount);
 
         assertEq(debtShares.balanceOf(address(this)), targetShares);
@@ -36,23 +36,25 @@ contract PoolBorrowTest is PoolSetup {
     function test_borrow_max() public {
         pool.setStabilityFee(0);
 
-        pool.borrow(poolDataProvider.maxXUSDBorrow(address(this)), address(this));
+        uint256 maxXusdBorrow = poolDataProvider.maxXUSDBorrow(address(this));
+        uint256 maxDebtShares = pool.convertToShares(maxXusdBorrow);
+        pool.borrow(maxXusdBorrow, maxDebtShares, address(this));
 
         assertEq(pool.getHealthFactor(address(this)), pool.getMinHealthFactorForBorrow());
         assertEq(poolDataProvider.maxXUSDBorrow(address(this)), 0);
     }
 
     function test_cooldown() public {
-        pool.borrow(1e10, address(this));
+        pool.borrow(1e10, type(uint256).max, address(this));
 
         pool.setCooldownPeriod(12 hours);
 
         vm.expectRevert(IPool.Cooldown.selector);
-        pool.repay(1e10);
+        pool.repay(1e10, type(uint256).max);
 
         vm.warp(block.timestamp + 12 hours + 1);
         _updateOraclePrice();
-        pool.repay(1e10);
+        pool.repay(1e10, type(uint256).max);
     }
 
     function test_borrow_fee() public {
@@ -62,7 +64,7 @@ contract PoolBorrowTest is PoolSetup {
 
         pool.supply(address(wbtc), 1000 ether);
 
-        pool.borrow(100 ether, user);
+        pool.borrow(100 ether, type(uint256).max, user);
 
         assertEq(IERC20(xusd).balanceOf(user), 99 ether);
         assertEq(IERC20(xusd).balanceOf(address(this)), 1 ether);
@@ -70,7 +72,7 @@ contract PoolBorrowTest is PoolSetup {
     }
 
     function test_stabilityFeeDecreaseHF() public {
-        pool.borrow(100 ether, address(this));
+        pool.borrow(100 ether, type(uint256).max, address(this));
         assertEq(debtShares.balanceOf(address(this)), 100 ether);
 
         uint256 hfBefore = pool.getHealthFactor(address(this));
@@ -88,7 +90,7 @@ contract PoolBorrowTest is PoolSetup {
     function test_stabilityFeeAccountInBorrow() public {
         uint256 amount = 100 ether;
 
-        pool.borrow(amount, address(this));
+        pool.borrow(amount, type(uint256).max, address(this));
         assertEq(debtShares.balanceOf(address(this)), amount);
 
         _skipAndUpdateOraclePrice(1 weeks);
@@ -96,11 +98,16 @@ contract PoolBorrowTest is PoolSetup {
         uint256 stabilityFee = pool.calculateStabilityFee(address(this));
         assertGt(stabilityFee, 0);
 
-        pool.borrow(amount, address(this));
+        pool.borrow(amount, type(uint256).max, address(this));
 
         stabilityFee = pool.calculateStabilityFee(address(this));
         assertEq(stabilityFee, 0);
 
         assertGt(debtShares.balanceOf(address(this)), amount);
+    }
+
+    function test_borrow_ShouldRevertIfDebtSharesTooHigh() public {
+        vm.expectPartialRevert(IPool.DebtSharesTooHigh.selector);
+        pool.borrow(1e18, 0, address(this));
     }
 }

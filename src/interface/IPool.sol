@@ -40,35 +40,46 @@ interface IPool {
     function withdraw(address token, uint256 amount, address to) external;
 
     /// @notice Borrow xusd from the protocol
-    /// @param amount The amount of xusd to borrow
+    /// @param xusdAmount The amount of xusd to borrow
+    /// @param maxDebtShares The maximum amount of debt shares user will receive
     /// @param to The address to receive the borrowed xusd
     /// @dev Minimum health factor after borrow should be greater than getMinHealthFactorForBorrow()
-    function borrow(uint256 amount, address to) external;
+    function borrow(uint256 xusdAmount, uint256 maxDebtShares, address to) external;
 
     /// @notice Repay xusd to the protocol
     /// @param amount The amount of shares to repay
+    /// @param maxXusdAmount The maximum amount of xusd user will allow to repay
     /// @dev Maximum health factor after repay should be greater than WAD
-    function repay(uint256 amount) external;
+    function repay(uint256 amount, uint256 maxXusdAmount) external;
 
     /// @notice Liquidate a user's position
     /// @param positionOwner    The address of the position owner to liquidate
     /// @param token The collateral token to liquidate
+    /// @param minTokenAmount The minimum amount of collateral that liquidator will receive
     /// @param shares The amount of shares to liquidate
     /// @param to The address to receive the liquidated collateral
     /// @notice If position health factor < WAD, the position can be liquidated
     /// @notice Max amount of shares to liquidate is user's debt shares balance / 2
-    function liquidate(address positionOwner, address token, uint256 shares, address to) external;
+    function liquidate(
+        address positionOwner,
+        address token,
+        uint256 minTokenAmount,
+        uint256 shares,
+        address to
+    ) external;
 
     /// @notice Supply and borrow
     /// @param token The address of the token to supply
     /// @param supplyAmount The amount of the token to supply
     /// @param borrowAmount The amount of xusd to borrow
+    /// @param maxDebtShares The maximum amount of debt shares user will receive
     /// @param borrowTo The address to receive the borrowed xusd
     /// @dev Minimum health factor after supplyAndBorrow should be greater than getMinHealthFactorForBorrow()
     function supplyAndBorrow(
         address token,
         uint256 supplyAmount,
         uint256 borrowAmount,
+        uint256 maxDebtShares,
         address borrowTo
     ) external;
 
@@ -83,8 +94,11 @@ interface IPool {
 
     /// @notice Supply ETH and borrow xusd
     /// @param borrowAmount The amount of xusd to borrow
+    /// @param maxDebtShares The maximum amount of debt shares user will receive
     /// @param borrowTo The address to receive the borrowed xusd
-    function supplyETHAndBorrow(uint256 borrowAmount, address borrowTo) external payable;
+    function supplyETHAndBorrow(uint256 borrowAmount, uint256 maxDebtShares, address borrowTo)
+        external
+        payable;
 
     /* ======== View Functions ======== */
 
@@ -277,4 +291,7 @@ interface IPool {
     error LiquidationDeductionsTooHigh();
     error CollateralTokenAlreadyExists();
     error CollateralTokenNotFound();
+    error RepayAmountTooHigh(uint256 xusdAmount, uint256 maxXusdAmount);
+    error TokenAmountTooLow(uint256 required, uint256 available);
+    error DebtSharesTooHigh(uint256 required, uint256 available);
 }
