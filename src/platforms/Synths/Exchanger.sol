@@ -272,7 +272,7 @@ contract Exchanger is IExchanger, UUPSImplementation {
     ) external onlyOwner returns (address) {
         address synth = _implementation.clone();
         ISynth(synth).initialize(_owner, address(provider()), _name, _symbol);
-        addNewSynth(synth);
+        _addNewSynth(synth);
         return synth;
     }
 
@@ -284,9 +284,7 @@ contract Exchanger is IExchanger, UUPSImplementation {
     {
         if (isSynth[_synth]) revert SynthAlreadyExists();
 
-        isSynth[_synth] = true;
-        _synths.push(_synth);
-        emit SynthAdded(_synth);
+        _addNewSynth(_synth);
     }
 
     function removeSynth(address _synth) external onlyOwner onlySynth(_synth) {
@@ -322,6 +320,12 @@ contract Exchanger is IExchanger, UUPSImplementation {
 
     function initialize(address, address) public override initializer {
         revert DeprecatedInitializer();
+    }
+
+    function _addNewSynth(address _synth) internal {
+        isSynth[_synth] = true;
+        _synths.push(_synth);
+        emit SynthAdded(_synth);
     }
 
     function _afterInitialize() internal override {
