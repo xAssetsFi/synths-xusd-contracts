@@ -110,8 +110,8 @@ abstract contract Rewarder is Initializable, ERC20Upgradeable, UUPSImplementatio
             duration = DURATION - (block.timestamp - stageDistributionStarted);
         }
 
-        int8 i = rewardTokens.getIndex(rt);
-        require(i != -1, "rewardTokenIndex not found");
+        uint256 i = rewardTokens.indexOf(rt);
+        require(i != type(uint256).max, "rewardTokenIndex not found");
 
         if (block.timestamp >= periodFinishForToken[rt]) {
             rewardRateForToken[rt] = reward / duration;
@@ -127,7 +127,7 @@ abstract contract Rewarder is Initializable, ERC20Upgradeable, UUPSImplementatio
     }
 
     function addRewardToken(address rt) public onlyOwner {
-        require(rewardTokens.getIndex(rt) == -1, "Reward token already exists");
+        require(!rewardTokens.contain(rt), "Reward token already exists");
         rewardTokens.push(rt);
 
         emit NewRewardToken(rt);
