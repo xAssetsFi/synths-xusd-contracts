@@ -22,7 +22,6 @@ abstract contract ProviderKeeperUpgradeable is Base {
 
     function __ProviderKeeper_init(address newProvider)
         internal
-        noZeroAddress(newProvider)
         onlyInitializing
         validInterface(newProvider, type(IProvider).interfaceId)
     {
