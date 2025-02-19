@@ -9,7 +9,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import {PoolArrayLib} from "src/lib/PoolArrayLib.sol";
-import {Math as OZMathLib} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 abstract contract Position is Calculations {
     using SafeERC20 for IERC20;
@@ -72,7 +72,7 @@ abstract contract Position is Calculations {
 
         ISynth xusd = provider().xusd();
 
-        uint256 fee = OZMathLib.mulDiv(xusdAmount, loanFee, PRECISION);
+        uint256 fee = Math.mulDiv(xusdAmount, loanFee, PRECISION);
 
         xusd.mint(to, xusdAmount - fee);
         xusd.mint(feeReceiver, fee);
