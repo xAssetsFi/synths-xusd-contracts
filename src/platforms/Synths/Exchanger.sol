@@ -62,7 +62,7 @@ contract Exchanger is IExchanger, UUPSImplementation {
         rewarderFee = _rewarderFee;
         finishSwapDelay = _finishSwapDelay;
 
-        finishSwapGasCost = 200000;
+        finishSwapGasCost = 200_000;
 
         _afterInitialize();
     }
