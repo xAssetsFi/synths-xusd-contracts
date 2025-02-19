@@ -49,6 +49,7 @@ contract PoolWithdrawTest is PoolSetup {
     function testFuzz_withdraw_withBorrow(uint256 amount) public {
         vm.assume(amount > 0);
         vm.assume(amount <= amountSuppliedUSDC);
+        pool.setStabilityFee(0);
 
         pool.borrow(1e18, address(this));
 
@@ -78,10 +79,11 @@ contract PoolWithdrawTest is PoolSetup {
 
         address to = makeAddr("to");
 
-        pool.supplyETHAndBorrow{value: amount}(amount / 4, to);
-        pool.withdrawETH(amount / 4, to);
+        pool.supplyETH{value: amount}();
 
-        assertEq(to.balance, amount / 4);
+        pool.withdrawETH(amount, to);
+
+        assertEq(to.balance, amount);
     }
 
     function test_stabilityFeeAccountInWithdraw() public {

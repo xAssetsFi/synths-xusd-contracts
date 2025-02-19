@@ -4,29 +4,38 @@ pragma solidity ^0.8.20;
 import {IPool} from "src/interface/IPool.sol";
 
 library PoolArrayLib {
-    function remove(IPool.CollateralData[] storage array, address target) internal {
-        if (array.length == 1) array.pop();
-
-        for (uint256 i = 0; i < array.length; i++) {
-            if (array[i].token == target) {
-                array[i] = array[array.length - 1];
+    function remove(IPool.CollateralData[] storage array, address token) internal returns (bool) {
+        uint256 len = array.length;
+        for (uint256 i = 0; i < len; i++) {
+            if (array[i].token == token) {
+                if (len > 1) {
+                    array[i] = array[len - 1];
+                }
                 array.pop();
-                break;
+                return true;
             }
         }
+
+        return false;
     }
 
-    function getIndex(IPool.CollateralData[] memory array, address token)
+    function indexOf(IPool.CollateralData[] memory array, address token)
         internal
         pure
-        returns (int8)
+        returns (uint256)
     {
         for (uint256 i = 0; i < array.length; i++) {
-            if (array[i].token == token) {
-                return int8(uint8(i));
-            }
+            if (array[i].token == token) return i;
         }
 
-        return -1;
+        return type(uint256).max;
+    }
+
+    function contain(IPool.CollateralData[] memory array, address token)
+        internal
+        pure
+        returns (bool)
+    {
+        return indexOf(array, token) != type(uint256).max;
     }
 }

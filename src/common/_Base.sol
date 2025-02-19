@@ -7,8 +7,8 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {ERC165Registry, IERC165} from "src/common/_ERC165Registry.sol";
 
 abstract contract Base is Errors, Initializable, ERC165Registry {
-    uint256 constant WAD = 1e18;
-    uint256 constant PRECISION = 10000; // precision for percentage points (100% = 10000)
+    uint256 public constant WAD = 1e18;
+    uint256 public constant PRECISION = 100_00; // precision for percentage points (100% = 10000)
 
     /* ======== Modifiers ======== */
 
