@@ -39,10 +39,12 @@ abstract contract Position is Calculations {
         uint256 index = position.collaterals.indexOf(token);
         if (index == type(uint256).max) revert NotCollateralToken();
 
-        position.collaterals[uint8(index)].amount -= amount;
+        CollateralData storage collateral = position.collaterals[uint8(index)];
+
+        collateral.amount -= amount;
         IERC20(token).safeTransfer(to, amount);
 
-        if (position.collaterals[uint8(index)].amount == 0) {
+        if (collateral.amount == 0) {
             position.collaterals.remove(token);
         }
 
