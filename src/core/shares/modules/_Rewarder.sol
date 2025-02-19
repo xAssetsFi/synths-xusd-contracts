@@ -12,7 +12,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {ArrayLib} from "src/lib/ArrayLib.sol";
+import {ArrayLib, INDEX_NOT_FOUND} from "src/lib/ArrayLib.sol";
 /// @notice Rewarder is a contract that distributes rewards to debt shares holders
 /// this contract can be used for multiple reward tokens
 
@@ -116,7 +116,7 @@ abstract contract Rewarder is Initializable, ERC20Upgradeable, UUPSImplementatio
         }
 
         uint256 i = rewardTokens.indexOf(rt);
-        require(i != type(uint256).max, "rewardTokenIndex not found");
+        require(i != INDEX_NOT_FOUND, "rewardTokenIndex not found");
 
         if (block.timestamp >= periodFinishForToken[rt]) {
             rewardRateForToken[rt] = reward / duration;

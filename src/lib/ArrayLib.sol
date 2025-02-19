@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.20;
 
+uint256 constant INDEX_NOT_FOUND = type(uint256).max;
+
 library ArrayLib {
     function remove(address[] storage array, address addressToRemove) internal returns (bool) {
         uint256 len = array.length;
@@ -27,10 +29,10 @@ library ArrayLib {
             if (array[i] == addressToFind) return i;
         }
 
-        return type(uint256).max;
+        return INDEX_NOT_FOUND;
     }
 
     function contain(address[] memory array, address addressToFind) internal pure returns (bool) {
-        return indexOf(array, addressToFind) != type(uint256).max;
+        return indexOf(array, addressToFind) != INDEX_NOT_FOUND;
     }
 }

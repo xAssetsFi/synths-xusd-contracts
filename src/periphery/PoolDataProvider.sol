@@ -9,7 +9,7 @@ import {IOracleAdapter} from "src/interface/IOracleAdapter.sol";
 
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import {PoolArrayLib} from "src/lib/PoolArrayLib.sol";
+import {PoolArrayLib, INDEX_NOT_FOUND} from "src/lib/PoolArrayLib.sol";
 
 contract PoolDataProvider is IPoolDataProvider, UUPSImplementation {
     using PoolArrayLib for IPool.CollateralData[];
@@ -73,13 +73,13 @@ contract PoolDataProvider is IPoolDataProvider, UUPSImplementation {
         uint256 index = position.collaterals.indexOf(params.collateralToken);
 
         if (params.collateralAmount > 0) {
-            if (index == type(uint256).max) {
+            if (index == INDEX_NOT_FOUND) {
                 position = _copyPositionAndPushCollateral(position, params);
             } else {
                 position.collaterals[uint8(index)].amount += uint256(params.collateralAmount);
             }
         } else if (params.collateralAmount < 0) {
-            position.collaterals[uint8(index)].amount -=
+            position.collaterals[index].amount -=
                 type(uint256).max - uint256(params.collateralAmount) + 1;
         }
 

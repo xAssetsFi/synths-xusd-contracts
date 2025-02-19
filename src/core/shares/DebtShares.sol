@@ -18,12 +18,7 @@ contract DebtShares is Rewarder {
         _mint(to, amount);
     }
 
-    function burn(address from, uint256 amount)
-        external
-        onlyPool
-        updateRewards(from)
-        noZeroUint(amount)
-    {
+    function burn(address from, uint256 amount) external onlyPool noZeroUint(amount) {
         _claimRewards(from);
         _burn(from, amount);
     }

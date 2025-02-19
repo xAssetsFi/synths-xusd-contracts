@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {IPool} from "src/interface/IPool.sol";
 import {WETHGateway} from "./modules/_WETHGateway.sol";
 
-import {ArrayLib} from "src/lib/ArrayLib.sol";
+import {ArrayLib, INDEX_NOT_FOUND} from "src/lib/ArrayLib.sol";
 
 import {CalculationsInitParams} from "./modules/_Calculations.sol";
 
@@ -12,6 +12,8 @@ import {CalculationsInitParams} from "./modules/_Calculations.sol";
 /// @dev Inheritance:
 /// Pool -> WETHGateway -> Position -> Calculations -> State -> UUPSImplementation -> Base
 contract Pool is WETHGateway {
+    using ArrayLib for address[];
+
     function initialize(
         address _owner,
         address _provider,
@@ -72,7 +74,7 @@ contract Pool is WETHGateway {
 
         _repay(amountToRepay);
 
-        if (shares == type(uint256).max) {
+        if (shares == INDEX_NOT_FOUND) {
             Position memory position = _positions[msg.sender];
 
             for (uint256 i = 0; i < position.collaterals.length; i++) {
@@ -84,7 +86,6 @@ contract Pool is WETHGateway {
     function liquidate(address positionOwner, address token, uint256 shares, address to)
         external
         noPaused
-        isPosExist(positionOwner)
         isCollateral(token)
         chargeStabilityFee(positionOwner)
         nonReentrant
@@ -121,13 +122,17 @@ contract Pool is WETHGateway {
     /* ======== Admin Functions ======== */
 
     function addCollateralToken(address token) external onlyOwner {
+        if (isCollateralToken[token]) revert CollateralTokenAlreadyExists();
+
         _collateralTokens.push(token);
         isCollateralToken[token] = true;
         emit CollateralTokenAdded(token);
     }
 
     function removeCollateralToken(address token) external onlyOwner {
-        ArrayLib.remove(_collateralTokens, token);
+        bool removed = _collateralTokens.remove(token);
+        if (!removed) revert CollateralTokenNotFound();
+
         isCollateralToken[token] = false;
         emit CollateralTokenRemoved(token);
     }

@@ -3,6 +3,8 @@ pragma solidity ^0.8.20;
 
 import {IPool} from "src/interface/IPool.sol";
 
+import {INDEX_NOT_FOUND} from "src/lib/ArrayLib.sol";
+
 library PoolArrayLib {
     function remove(IPool.CollateralData[] storage array, address token) internal returns (bool) {
         uint256 len = array.length;
@@ -28,7 +30,7 @@ library PoolArrayLib {
             if (array[i].token == token) return i;
         }
 
-        return type(uint256).max;
+        return INDEX_NOT_FOUND;
     }
 
     function contain(IPool.CollateralData[] memory array, address token)
@@ -36,6 +38,6 @@ library PoolArrayLib {
         pure
         returns (bool)
     {
-        return indexOf(array, token) != type(uint256).max;
+        return indexOf(array, token) != INDEX_NOT_FOUND;
     }
 }
