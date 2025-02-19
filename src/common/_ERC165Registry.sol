@@ -52,5 +52,8 @@ abstract contract ERC165Registry is IERC165 {
     function _registerInterface(bytes4 interfaceId) internal {
         require(interfaceId != 0xffffffff, "ERC165: invalid interface id");
         _supportedInterfaces[interfaceId] = true;
+        emit InterfaceRegistered(interfaceId);
     }
+
+    event InterfaceRegistered(bytes4 interfaceId);
 }
