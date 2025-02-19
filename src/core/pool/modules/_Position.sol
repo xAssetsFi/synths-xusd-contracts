@@ -20,9 +20,9 @@ abstract contract Position is Calculations {
         Position storage position = _positions[msg.sender];
 
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
-        int8 index = position.collaterals.getIndex(token);
+        uint256 index = position.collaterals.indexOf(token);
 
-        if (index == -1) {
+        if (index == type(uint256).max) {
             position.collaterals.push(CollateralData(token, amount));
         } else {
             position.collaterals[uint8(index)].amount += amount;
@@ -36,8 +36,8 @@ abstract contract Position is Calculations {
     function _withdraw(address token, uint256 amount, address to) internal noZeroUint(amount) {
         Position storage position = _positions[msg.sender];
 
-        int8 index = position.collaterals.getIndex(token);
-        if (index == -1) revert NotCollateralToken();
+        uint256 index = position.collaterals.indexOf(token);
+        if (index == type(uint256).max) revert NotCollateralToken();
 
         position.collaterals[uint8(index)].amount -= amount;
         IERC20(token).safeTransfer(to, amount);
@@ -95,7 +95,7 @@ abstract contract Position is Calculations {
         (uint256 base, uint256 bonus, uint256 penalty) =
             calculateDeductionsWhileLiquidation(collateralToken, xusdAmount);
 
-        uint8 i = uint8(position.collaterals.getIndex(collateralToken));
+        uint256 i = position.collaterals.indexOf(collateralToken);
 
         if (position.collaterals[i].amount < base + bonus + penalty) {
             revert NotEnoughCollateral(base + bonus + penalty, position.collaterals[i].amount);

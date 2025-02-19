@@ -70,10 +70,10 @@ contract PoolDataProvider is IPoolDataProvider, UUPSImplementation {
 
         IPool.Position memory position = pool.getPosition(user);
 
-        int8 index = position.collaterals.getIndex(params.collateralToken);
+        uint256 index = position.collaterals.indexOf(params.collateralToken);
 
         if (params.collateralAmount > 0) {
-            if (index == -1) {
+            if (index == type(uint256).max) {
                 position = _copyPositionAndPushCollateral(position, params);
             } else {
                 position.collaterals[uint8(index)].amount += uint256(params.collateralAmount);
@@ -132,7 +132,7 @@ contract PoolDataProvider is IPoolDataProvider, UUPSImplementation {
 
         IPool.Position memory position = pool.getPosition(user);
 
-        uint8 index = uint8(position.collaterals.getIndex(token));
+        uint256 index = position.collaterals.indexOf(token);
 
         uint256 _totalCollateralValue = pool.totalPositionCollateralValue(position.collaterals);
 
