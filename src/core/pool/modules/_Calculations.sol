@@ -191,10 +191,12 @@ abstract contract Calculations is State {
         uint256 ratioDiff;
         if (adjustment.targetRatio > adjustment.startRatio) {
             ratioDiff = uint256(adjustment.targetRatio) - uint256(adjustment.startRatio);
-            return uint256(adjustment.startRatio) + (ratioDiff * elapsed) / adjustment.duration;
+            return uint256(adjustment.startRatio)
+                + Math.mulDiv(ratioDiff, elapsed, adjustment.duration);
         } else {
             ratioDiff = uint256(adjustment.startRatio) - uint256(adjustment.targetRatio);
-            return uint256(adjustment.startRatio) - (ratioDiff * elapsed) / adjustment.duration;
+            return uint256(adjustment.startRatio)
+                - Math.mulDiv(ratioDiff, elapsed, adjustment.duration);
         }
     }
 

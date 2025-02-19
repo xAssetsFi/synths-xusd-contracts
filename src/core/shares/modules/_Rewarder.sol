@@ -9,13 +9,13 @@ import {ERC20Upgradeable} from
     "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {ArrayLib} from "src/lib/ArrayLib.sol";
-
 /// @notice Rewarder is a contract that distributes rewards to debt shares holders
 /// this contract can be used for multiple reward tokens
+
 abstract contract Rewarder is Initializable, ERC20Upgradeable, UUPSImplementation, IDebtShares {
     using SafeERC20 for IERC20;
     using ArrayLib for address[];
@@ -50,10 +50,11 @@ abstract contract Rewarder is Initializable, ERC20Upgradeable, UUPSImplementatio
 
         uint256 tokenPrecision = 10 ** IERC20Metadata(rt).decimals(); // ??? mb 1e18
         return rewardPerTokenStoredForToken[rt]
-            + (
-                (lastTimeRewardApplicable(rt) - lastUpdateTimeForToken[rt]) * rewardRateForToken[rt]
-                    * tokenPrecision
-            ) / totalSupply();
+            + Math.mulDiv(
+                lastTimeRewardApplicable(rt) - lastUpdateTimeForToken[rt],
+                rewardRateForToken[rt] * tokenPrecision,
+                totalSupply()
+            );
     }
 
     function lastTimeRewardApplicable(address rt) public view returns (uint256) {
@@ -64,9 +65,11 @@ abstract contract Rewarder is Initializable, ERC20Upgradeable, UUPSImplementatio
     function earned(address rt, address account) public view returns (uint256) {
         uint256 tokenPrecision = 10 ** IERC20Metadata(rt).decimals(); // ??? mb 1e18
 
-        return (
-            balanceOf(account) * (rewardPerToken(rt) - userRewardPerTokenPaidForToken[rt][account])
-        ) / tokenPrecision + rewardsForToken[rt][account];
+        return Math.mulDiv(
+            balanceOf(account),
+            rewardPerToken(rt) - userRewardPerTokenPaidForToken[rt][account],
+            tokenPrecision
+        ) + rewardsForToken[rt][account];
     }
 
     function claimRewards() external returns (address[] memory, uint256[] memory) {

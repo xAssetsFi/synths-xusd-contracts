@@ -12,6 +12,7 @@ import {IPlatform} from "src/interface/platforms/IPlatform.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {ArrayLib} from "src/lib/ArrayLib.sol";
 
@@ -164,9 +165,9 @@ contract Exchanger is IExchanger, UUPSImplementation {
         view
         returns (uint256 _swapFee, uint256 _rewarderFee, uint256 _burned)
     {
-        _swapFee = (amountIn * swapFee) / PRECISION;
-        _rewarderFee = (amountIn * rewarderFee) / PRECISION;
-        _burned = (amountIn * burntAtSwap) / PRECISION;
+        _swapFee = Math.mulDiv(amountIn, swapFee, PRECISION);
+        _rewarderFee = Math.mulDiv(amountIn, rewarderFee, PRECISION);
+        _burned = Math.mulDiv(amountIn, burntAtSwap, PRECISION);
     }
 
     function finishSwap(address user, address synth, address settlementCompensationReceiver)
@@ -217,8 +218,11 @@ contract Exchanger is IExchanger, UUPSImplementation {
         for (uint256 i = 0; i < _synths.length; i++) {
             IERC20Metadata synth = IERC20Metadata(_synths[i]);
 
-            tf += ((synth.totalSupply() * WAD) * oracle.getPrice(_synths[i]))
-                / (10 ** synth.decimals() * oracle.precision());
+            uint256 totalSupply = synth.totalSupply() * WAD;
+            uint256 price = oracle.getPrice(_synths[i]);
+            uint256 decimals = 10 ** synth.decimals();
+
+            tf += Math.mulDiv(totalSupply, price, decimals * oracle.precision());
         }
     }
 
@@ -243,7 +247,7 @@ contract Exchanger is IExchanger, UUPSImplementation {
     {
         IOracleAdapter oracle = provider().oracle();
 
-        amountOut = (amountIn * oracle.getPrice(synthIn)) / oracle.getPrice(synthOut);
+        amountOut = Math.mulDiv(amountIn, oracle.getPrice(synthIn), oracle.getPrice(synthOut));
     }
 
     function getPendingSwap(address user, address synth)
