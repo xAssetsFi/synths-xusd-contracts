@@ -121,13 +121,17 @@ contract Pool is WETHGateway {
     /* ======== Admin Functions ======== */
 
     function addCollateralToken(address token) external onlyOwner {
+        if (isCollateralToken[token]) revert CollateralTokenAlreadyExists();
+
         _collateralTokens.push(token);
         isCollateralToken[token] = true;
         emit CollateralTokenAdded(token);
     }
 
     function removeCollateralToken(address token) external onlyOwner {
-        ArrayLib.remove(_collateralTokens, token);
+        bool removed = ArrayLib.remove(_collateralTokens, token);
+        if (!removed) revert CollateralTokenNotFound();
+
         isCollateralToken[token] = false;
         emit CollateralTokenRemoved(token);
     }
