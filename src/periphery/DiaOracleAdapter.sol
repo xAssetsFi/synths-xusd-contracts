@@ -16,7 +16,11 @@ contract DiaOracleAdapter is IDiaOracleAdapter, UUPSImplementation {
 
     uint256 public constant PRICE_FRESHNESS = 12 hours;
 
-    function initialize(address _owner, address _provider, address _diaOracle) public initializer {
+    function initialize(address _owner, address _provider, address _diaOracle)
+        public
+        initializer
+        noZeroAddress(_diaOracle)
+    {
         __UUPSImplementation_init(_owner, _provider);
         diaOracle = IDIAOracleV2(_diaOracle);
         _afterInitialize();
