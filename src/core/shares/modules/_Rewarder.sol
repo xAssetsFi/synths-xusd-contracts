@@ -57,12 +57,9 @@ abstract contract Rewarder is Initializable, ERC20Upgradeable, UUPSImplementatio
 
         if (totalSupply() == 0) return data.rewardPerTokenStored;
 
-        uint256 tokenPrecision = 10 ** IERC20Metadata(rt).decimals(); // ??? mb 1e18
         return data.rewardPerTokenStored
             + Math.mulDiv(
-                lastTimeRewardApplicable(rt) - data.lastUpdateTime,
-                data.rewardRate * tokenPrecision,
-                totalSupply()
+                lastTimeRewardApplicable(rt) - data.lastUpdateTime, data.rewardRate * WAD, totalSupply()
             );
     }
 
@@ -72,14 +69,10 @@ abstract contract Rewarder is Initializable, ERC20Upgradeable, UUPSImplementatio
     }
 
     function earned(address rt, address account) public view returns (uint256) {
-        uint256 tokenPrecision = 10 ** IERC20Metadata(rt).decimals(); // ??? mb 1e18
-
         RewardData storage data = rewardData[rt];
 
         return Math.mulDiv(
-            balanceOf(account),
-            rewardPerToken(rt) - data.userRewardPerTokenPaid[account],
-            tokenPrecision
+            balanceOf(account), rewardPerToken(rt) - data.userRewardPerTokenPaid[account], WAD
         ) + data.rewards[account];
     }
 
