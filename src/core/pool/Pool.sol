@@ -86,7 +86,6 @@ contract Pool is WETHGateway {
     function liquidate(address positionOwner, address token, uint256 shares, address to)
         external
         noPaused
-        isPosExist(positionOwner)
         isCollateral(token)
         chargeStabilityFee(positionOwner)
         nonReentrant
