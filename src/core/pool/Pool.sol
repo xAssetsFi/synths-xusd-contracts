@@ -12,6 +12,8 @@ import {CalculationsInitParams} from "./modules/_Calculations.sol";
 /// @dev Inheritance:
 /// Pool -> WETHGateway -> Position -> Calculations -> State -> UUPSImplementation -> Base
 contract Pool is WETHGateway {
+    using ArrayLib for address[];
+
     function initialize(
         address _owner,
         address _provider,
@@ -129,7 +131,7 @@ contract Pool is WETHGateway {
     }
 
     function removeCollateralToken(address token) external onlyOwner {
-        bool removed = ArrayLib.remove(_collateralTokens, token);
+        bool removed = _collateralTokens.remove(token);
         if (!removed) revert CollateralTokenNotFound();
 
         isCollateralToken[token] = false;
