@@ -20,7 +20,7 @@ abstract contract Rewarder is Initializable, ERC20Upgradeable, UUPSImplementatio
     using SafeERC20 for IERC20;
     using ArrayLib for address[];
 
-    uint32 stageDistributionStarted;
+    uint32 internal stageDistributionStarted;
 
     uint32 public constant DURATION = 12 hours;
 
