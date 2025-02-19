@@ -137,7 +137,8 @@ abstract contract Calculations is State {
         view
         returns (uint256 base, uint256 bonus, uint256 penalty)
     {
-        uint256 tokenDecimalsDelta = 10 ** (18 - IERC20Metadata(collateralToken).decimals());
+        uint256 tokenDecimalsDelta =
+            10 ** (provider().xusd().decimals() - IERC20Metadata(collateralToken).decimals());
 
         IOracleAdapter oracle = provider().oracle();
 

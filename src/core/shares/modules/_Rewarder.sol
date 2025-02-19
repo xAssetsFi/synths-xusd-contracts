@@ -20,7 +20,7 @@ abstract contract Rewarder is Initializable, ERC20Upgradeable, UUPSImplementatio
     using SafeERC20 for IERC20;
     using ArrayLib for address[];
 
-    uint32 stageDistributionStarted;
+    uint32 internal stageDistributionStarted;
 
     uint32 public constant DURATION = 12 hours;
 
@@ -33,7 +33,8 @@ abstract contract Rewarder is Initializable, ERC20Upgradeable, UUPSImplementatio
     mapping(address => mapping(address => uint256)) public rewardsForToken;
 
     modifier updateRewards(address account) {
-        for (uint256 i = 0; i < rewardTokens.length; i++) {
+        uint256 len = rewardTokens.length;
+        for (uint256 i = 0; i < len; i++) {
             address rt = rewardTokens[i];
             rewardPerTokenStoredForToken[rt] = rewardPerToken(rt);
             lastUpdateTimeForToken[rt] = lastTimeRewardApplicable(rt);
@@ -81,9 +82,10 @@ abstract contract Rewarder is Initializable, ERC20Upgradeable, UUPSImplementatio
         updateRewards(account)
         returns (address[] memory, uint256[] memory)
     {
-        uint256[] memory amounts = new uint256[](rewardTokens.length);
+        uint256 len = rewardTokens.length;
+        uint256[] memory amounts = new uint256[](len);
 
-        for (uint256 i = 0; i < rewardTokens.length; i++) {
+        for (uint256 i = 0; i < len; i++) {
             address rt = rewardTokens[i];
             uint256 reward = earned(rt, account);
             if (reward > 0 && IERC20(rt).balanceOf(address(this)) >= reward) {

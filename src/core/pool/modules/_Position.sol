@@ -9,7 +9,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import {PoolArrayLib} from "src/lib/PoolArrayLib.sol";
-import {Math as OZMathLib} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 abstract contract Position is Calculations {
     using SafeERC20 for IERC20;
@@ -39,10 +39,12 @@ abstract contract Position is Calculations {
         uint256 index = position.collaterals.indexOf(token);
         if (index == type(uint256).max) revert NotCollateralToken();
 
-        position.collaterals[uint8(index)].amount -= amount;
+        CollateralData storage collateral = position.collaterals[uint8(index)];
+
+        collateral.amount -= amount;
         IERC20(token).safeTransfer(to, amount);
 
-        if (position.collaterals[uint8(index)].amount == 0) {
+        if (collateral.amount == 0) {
             position.collaterals.remove(token);
         }
 
@@ -70,7 +72,7 @@ abstract contract Position is Calculations {
 
         ISynth xusd = provider().xusd();
 
-        uint256 fee = OZMathLib.mulDiv(xusdAmount, loanFee, PRECISION);
+        uint256 fee = Math.mulDiv(xusdAmount, loanFee, PRECISION);
 
         xusd.mint(to, xusdAmount - fee);
         xusd.mint(feeReceiver, fee);
@@ -96,12 +98,13 @@ abstract contract Position is Calculations {
             calculateDeductionsWhileLiquidation(collateralToken, xusdAmount);
 
         uint256 i = position.collaterals.indexOf(collateralToken);
+        uint256 totalXusdAmount = base + bonus + penalty;
 
-        if (position.collaterals[i].amount < base + bonus + penalty) {
-            revert NotEnoughCollateral(base + bonus + penalty, position.collaterals[i].amount);
+        if (position.collaterals[i].amount < totalXusdAmount) {
+            revert NotEnoughCollateral(totalXusdAmount, position.collaterals[i].amount);
         }
 
-        position.collaterals[i].amount -= base + bonus + penalty;
+        position.collaterals[i].amount -= totalXusdAmount;
         IERC20(collateralToken).safeTransfer(to, base + bonus);
         IERC20(collateralToken).safeTransfer(feeReceiver, penalty);
 
