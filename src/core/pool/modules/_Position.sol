@@ -53,8 +53,10 @@ abstract contract Position is Calculations {
         emit Withdraw(msg.sender, token, amount, to, !isPositionExist(msg.sender));
     }
 
-    function _repay(uint256 shares) internal noZeroUint(shares) {
+    function _repay(uint256 shares, uint256 maxXusdAmount) internal noZeroUint(shares) {
         uint256 xusdAmount = convertToAssets(shares);
+
+        if (xusdAmount > maxXusdAmount) revert RepayAmountTooHigh(xusdAmount, maxXusdAmount);
 
         debtShares.burn(msg.sender, shares);
 
@@ -65,8 +67,17 @@ abstract contract Position is Calculations {
         emit Repay(msg.sender, xusdAmount, debtShares.balanceOf(msg.sender));
     }
 
-    function _borrow(uint256 xusdAmount, address to) internal noZeroUint(xusdAmount) {
-        debtShares.mint(msg.sender, convertToShares(xusdAmount));
+    function _borrow(uint256 xusdAmount, uint256 maxDebtShares, address to)
+        internal
+        noZeroUint(xusdAmount)
+    {
+        uint256 debtSharesToMint = convertToShares(xusdAmount);
+
+        if (debtSharesToMint > maxDebtShares) {
+            revert DebtSharesTooHigh(debtSharesToMint, maxDebtShares);
+        }
+
+        debtShares.mint(msg.sender, debtSharesToMint);
 
         _checkHealthFactor(msg.sender, getMinHealthFactorForBorrow());
 
@@ -82,10 +93,13 @@ abstract contract Position is Calculations {
         emit Borrow(msg.sender, xusdAmount, to);
     }
 
-    function _liquidate(address positionOwner, address collateralToken, uint256 shares, address to)
-        internal
-        noZeroUint(shares)
-    {
+    function _liquidate(
+        address positionOwner,
+        address collateralToken,
+        uint256 minTokenAmount,
+        uint256 shares,
+        address to
+    ) internal noZeroUint(shares) {
         Position storage position = _positions[positionOwner];
 
         ISynth xusd = provider().xusd();
@@ -98,13 +112,17 @@ abstract contract Position is Calculations {
             calculateDeductionsWhileLiquidation(collateralToken, xusdAmount);
 
         uint256 i = position.collaterals.indexOf(collateralToken);
-        uint256 totalXusdAmount = base + bonus + penalty;
+        uint256 totalTokenAmount = base + bonus + penalty;
 
-        if (position.collaterals[i].amount < totalXusdAmount) {
-            revert NotEnoughCollateral(totalXusdAmount, position.collaterals[i].amount);
+        if (base + bonus < minTokenAmount) {
+            revert TokenAmountTooLow(base + bonus, minTokenAmount);
         }
 
-        position.collaterals[i].amount -= totalXusdAmount;
+        if (position.collaterals[i].amount < totalTokenAmount) {
+            revert NotEnoughCollateral(totalTokenAmount, position.collaterals[i].amount);
+        }
+
+        position.collaterals[i].amount -= totalTokenAmount;
         IERC20(collateralToken).safeTransfer(to, base + bonus);
         IERC20(collateralToken).safeTransfer(feeReceiver, penalty);
 

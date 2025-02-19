@@ -15,7 +15,7 @@ contract ExchangerSetup is Setup {
         super._afterSetup();
 
         pool.supply(address(usdc), amountSupplied);
-        pool.borrow(amountBorrowed, address(this));
+        pool.borrow(amountBorrowed, type(uint256).max, address(this));
 
         xusd.approve(address(exchanger), type(uint256).max);
 

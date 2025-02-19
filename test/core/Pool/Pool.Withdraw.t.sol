@@ -51,7 +51,7 @@ contract PoolWithdrawTest is PoolSetup {
         vm.assume(amount <= amountSuppliedUSDC);
         pool.setStabilityFee(0);
 
-        pool.borrow(1e18, address(this));
+        pool.borrow(1e18, type(uint256).max, address(this));
 
         uint256 healthFactorBefore = pool.getHealthFactor(address(this));
         uint256 balanceBefore = usdc.balanceOf(address(this));
@@ -64,7 +64,7 @@ contract PoolWithdrawTest is PoolSetup {
     }
 
     function test_withdraw_withBorrow_wholeAmountInOneCollateral() public {
-        pool.borrow(1e18, address(this));
+        pool.borrow(1e18, type(uint256).max, address(this));
 
         pool.withdraw(address(usdc), amountSuppliedUSDC, address(this));
 
@@ -87,7 +87,7 @@ contract PoolWithdrawTest is PoolSetup {
     }
 
     function test_stabilityFeeAccountInWithdraw() public {
-        pool.borrow(1e18, address(this));
+        pool.borrow(1e18, type(uint256).max, address(this));
 
         _skipAndUpdateOraclePrice(1 weeks);
 

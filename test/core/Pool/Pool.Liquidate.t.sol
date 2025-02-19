@@ -16,7 +16,9 @@ contract PoolLiquidateTest is PoolSetup {
     function _afterSetup() internal override {
         super._afterSetup();
 
-        pool.supplyAndBorrow(address(usdc), amountSupplied, amountBorrowed, address(this));
+        pool.supplyAndBorrow(
+            address(usdc), amountSupplied, amountBorrowed, type(uint256).max, address(this)
+        );
 
         diaOracle.setValue("USDC/USD", dePegUsdcPrice, uint128(block.timestamp));
     }
@@ -25,7 +27,7 @@ contract PoolLiquidateTest is PoolSetup {
         vm.assume(amount > 1e4 && amount <= receiverShares / 2);
 
         uint256 hfBefore = pool.getHealthFactor(address(this));
-        pool.liquidate(address(this), address(usdc), amount, address(this));
+        pool.liquidate(address(this), address(usdc), 0, amount, address(this));
         uint256 hfAfter = pool.getHealthFactor(address(this));
 
         assertGt(hfAfter, hfBefore);
@@ -50,7 +52,7 @@ contract PoolLiquidateTest is PoolSetup {
         uint256 xusdAmountBefore = xusd.balanceOf(address(this));
         uint256 collateralAmountBefore = IERC20(tokens[0]).balanceOf(address(this));
 
-        pool.liquidate(address(this), tokens[0], shares[0], address(this));
+        pool.liquidate(address(this), tokens[0], 0, shares[0], address(this));
 
         uint256 hfAfter = pool.getHealthFactor(address(this));
         uint256 xusdAmountAfter = xusd.balanceOf(address(this));
@@ -71,7 +73,7 @@ contract PoolLiquidateTest is PoolSetup {
         uint256 stabilityFeeBefore = pool.calculateStabilityFee(address(this));
         uint256 debtSharesBefore = debtShares.balanceOf(address(this));
 
-        pool.liquidate(address(this), address(usdc), liquidationAmount, address(this));
+        pool.liquidate(address(this), address(usdc), 0, liquidationAmount, address(this));
 
         uint256 stabilityFeeAfter = pool.calculateStabilityFee(address(this));
         uint256 debtSharesAfter = debtShares.balanceOf(address(this));
@@ -80,5 +82,14 @@ contract PoolLiquidateTest is PoolSetup {
         assertLt(stabilityFeeAfter, stabilityFeeBefore);
 
         assertGt(debtSharesAfter + liquidationAmount, debtSharesBefore);
+    }
+
+    function test_liquidate_ShouldRevertIfMinAmountIsNotMet() public {
+        uint256 liquidationAmount = receiverShares / 2;
+
+        vm.expectPartialRevert(IPool.TokenAmountTooLow.selector);
+        pool.liquidate(
+            address(this), address(usdc), type(uint256).max, liquidationAmount, address(this)
+        );
     }
 }

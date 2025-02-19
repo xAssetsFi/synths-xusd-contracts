@@ -24,7 +24,7 @@ contract PoolDataProviderTest is PoolDataProviderSetup {
 
     function test_maxWithdraw_allowZeroAmount() public {
         uint256 maxBorrow = poolDataProvider.maxXUSDBorrow(address(this));
-        pool.borrow(maxBorrow, address(this));
+        pool.borrow(maxBorrow, type(uint256).max, address(this));
 
         (uint256 tokenAmount, uint256 dollarAmount) =
             poolDataProvider.maxWithdraw(address(this), address(usdc));
@@ -43,7 +43,7 @@ contract PoolDataProviderTest is PoolDataProviderSetup {
     function test_maxBorrow_ZeroAmount() public {
         uint256 maxBorrow = poolDataProvider.maxXUSDBorrow(address(this));
 
-        pool.borrow(maxBorrow, address(this));
+        pool.borrow(maxBorrow, type(uint256).max, address(this));
 
         maxBorrow = poolDataProvider.maxXUSDBorrow(address(this));
         assertEq(maxBorrow, 0);
@@ -52,7 +52,7 @@ contract PoolDataProviderTest is PoolDataProviderSetup {
     function test_maxBorrow_withLowHf() public {
         uint256 maxBorrowBeforeBorrow = poolDataProvider.maxXUSDBorrow(address(this));
 
-        pool.borrow(maxBorrowBeforeBorrow, address(this));
+        pool.borrow(maxBorrowBeforeBorrow, type(uint256).max, address(this));
 
         diaOracle.setValue("USDC/USD", 1, uint128(block.timestamp));
 
@@ -73,7 +73,7 @@ contract PoolDataProviderTest is PoolDataProviderSetup {
     function test_healthFactor_withMaxBorrow() public {
         uint256 maxBorrow = poolDataProvider.maxXUSDBorrow(address(this));
 
-        pool.borrow(maxBorrow, address(this));
+        pool.borrow(maxBorrow, type(uint256).max, address(this));
 
         uint256 healthFactor = poolDataProvider.getHealthFactor(address(this));
         assertEq(healthFactor, pool.getMinHealthFactorForBorrow());
@@ -85,7 +85,7 @@ contract PoolDataProviderTest is PoolDataProviderSetup {
 
     function test_getAggregatedPoolData_nonEmptyState() public {
         pool.supply(address(wbtc), 10 ** wbtc.decimals());
-        pool.borrow(poolDataProvider.maxXUSDBorrow(address(this)), address(this));
+        pool.borrow(poolDataProvider.maxXUSDBorrow(address(this)), type(uint256).max, address(this));
 
         IPoolDataProvider.AggregatedPoolData memory data =
             poolDataProvider.getAggregatedPoolData(address(this));
@@ -103,7 +103,7 @@ contract PoolDataProviderTest is PoolDataProviderSetup {
     }
 
     function test_reCalcHF_supply_sameToken() public {
-        pool.borrow(poolDataProvider.maxXUSDBorrow(address(this)), address(this));
+        pool.borrow(poolDataProvider.maxXUSDBorrow(address(this)), type(uint256).max, address(this));
 
         address collateralToken = address(usdc);
         int256 collateralAmount = int256(10 ** usdc.decimals());
@@ -116,7 +116,7 @@ contract PoolDataProviderTest is PoolDataProviderSetup {
     }
 
     function test_reCalcHF_supply_diffToken() public {
-        pool.borrow(poolDataProvider.maxXUSDBorrow(address(this)), address(this));
+        pool.borrow(poolDataProvider.maxXUSDBorrow(address(this)), type(uint256).max, address(this));
 
         address collateralToken = address(wbtc);
         int256 collateralAmount = int256(10 ** wbtc.decimals());
@@ -129,7 +129,7 @@ contract PoolDataProviderTest is PoolDataProviderSetup {
     }
 
     function test_reCalcHF_withdraw() public {
-        pool.borrow(1e18, address(this));
+        pool.borrow(1e18, type(uint256).max, address(this));
 
         address collateralToken = address(usdc);
         int256 withdrawAmount = -int256(10 ** usdc.decimals());
@@ -142,7 +142,7 @@ contract PoolDataProviderTest is PoolDataProviderSetup {
     }
 
     function test_reCalcHF_borrow() public {
-        pool.borrow(1e18, address(this));
+        pool.borrow(1e18, type(uint256).max, address(this));
 
         int256 borrowAmount = int256(10 ** xusd.decimals());
 
@@ -154,7 +154,7 @@ contract PoolDataProviderTest is PoolDataProviderSetup {
     }
 
     function test_reCalcHF_repay() public {
-        pool.borrow(poolDataProvider.maxXUSDBorrow(address(this)), address(this));
+        pool.borrow(poolDataProvider.maxXUSDBorrow(address(this)), type(uint256).max, address(this));
 
         int256 repayAmount = -int256(10 ** xusd.decimals());
 
@@ -166,12 +166,12 @@ contract PoolDataProviderTest is PoolDataProviderSetup {
     }
 
     function test_findLiquidationOpportunity() public {
-        pool.borrow(poolDataProvider.maxXUSDBorrow(address(this)), address(this));
+        pool.borrow(poolDataProvider.maxXUSDBorrow(address(this)), type(uint256).max, address(this));
 
         address user1 = _makeUser("user1");
         vm.startPrank(user1);
         wbtc.approve(address(pool), wbtc.balanceOf(user1));
-        pool.supplyAndBorrow(address(wbtc), wbtc.balanceOf(user1), 1e18, user1);
+        pool.supplyAndBorrow(address(wbtc), wbtc.balanceOf(user1), 1e18, type(uint256).max, user1);
         vm.stopPrank();
 
         pool.getPosition(user1);
