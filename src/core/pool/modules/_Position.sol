@@ -98,12 +98,13 @@ abstract contract Position is Calculations {
             calculateDeductionsWhileLiquidation(collateralToken, xusdAmount);
 
         uint256 i = position.collaterals.indexOf(collateralToken);
+        uint256 totalXusdAmount = base + bonus + penalty;
 
-        if (position.collaterals[i].amount < base + bonus + penalty) {
-            revert NotEnoughCollateral(base + bonus + penalty, position.collaterals[i].amount);
+        if (position.collaterals[i].amount < totalXusdAmount) {
+            revert NotEnoughCollateral(totalXusdAmount, position.collaterals[i].amount);
         }
 
-        position.collaterals[i].amount -= base + bonus + penalty;
+        position.collaterals[i].amount -= totalXusdAmount;
         IERC20(collateralToken).safeTransfer(to, base + bonus);
         IERC20(collateralToken).safeTransfer(feeReceiver, penalty);
 
