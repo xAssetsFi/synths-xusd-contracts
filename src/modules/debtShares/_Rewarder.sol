@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.20;
 
-import {UUPSImplementation} from "src/common/_UUPSImplementation.sol";
+import {ProviderKeeperUpgradeable} from "src/common/_ProviderKeeperUpgradeable.sol";
 import {IDebtShares} from "src/interface/IDebtShares.sol";
 
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {ERC20Upgradeable} from
     "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -12,10 +11,10 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {ArrayLib, INDEX_NOT_FOUND} from "src/lib/ArrayLib.sol";
+
 /// @notice Rewarder is a contract that distributes rewards to debt shares holders
 /// this contract can be used for multiple reward tokens
-
-abstract contract Rewarder is Initializable, ERC20Upgradeable, UUPSImplementation, IDebtShares {
+abstract contract Rewarder is ERC20Upgradeable, ProviderKeeperUpgradeable, IDebtShares {
     struct RewardData {
         uint256 periodFinish;
         uint256 rewardRate;

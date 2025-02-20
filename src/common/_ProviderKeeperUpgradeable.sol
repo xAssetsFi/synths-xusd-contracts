@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.20;
 
-import {Base} from "src/common/_Base.sol";
+import {UUPSImplementation, OwnableUpgradeable} from "src/common/_UUPSImplementation.sol";
 import {IProvider} from "src/interface/IProvider.sol";
 
-abstract contract ProviderKeeperUpgradeable is Base {
+abstract contract ProviderKeeperUpgradeable is UUPSImplementation {
     /// @custom:storage-location erc7201:xAssetsFinance.storage.ProviderKeeper
     struct ProviderStorage {
         IProvider _provider;
@@ -20,13 +20,15 @@ abstract contract ProviderKeeperUpgradeable is Base {
         }
     }
 
-    function __ProviderKeeper_init(address newProvider)
+    function __ProviderKeeper_init(address _provider)
         internal
         onlyInitializing
-        validInterface(newProvider, type(IProvider).interfaceId)
+        validInterface(_provider, type(IProvider).interfaceId)
     {
+        __Ownable_init(OwnableUpgradeable(_provider).owner());
+
         ProviderStorage storage $ = _getProviderStorage();
-        $._provider = IProvider(newProvider);
+        $._provider = IProvider(_provider);
     }
 
     function provider()

@@ -33,7 +33,7 @@ contract FinishSwap is ExchangerSetup {
         uint256 previewedAmountOut = exchanger.previewSwap(address(gold), address(xusd), amountIn);
 
         uint256 goldPrice = oracleAdapter.getPrice(address(gold));
-        diaOracle.setValue("XAU/USD", uint128((goldPrice / 100) * 101), uint128(block.timestamp));
+        diaOracle.setValue("XAU/USD", uint128((goldPrice / 100) * 101));
 
         _finishSwap(address(this), address(gold));
         uint256 goldAfterSettle = gold.balanceOf(address(this));

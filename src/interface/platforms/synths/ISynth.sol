@@ -7,12 +7,7 @@ import {
 } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 interface ISynth is IERC20, IERC20Metadata {
-    function initialize(
-        address _owner,
-        address _provider,
-        string memory _name,
-        string memory _symbol
-    ) external;
+    function initialize(address _provider, string memory _name, string memory _symbol) external;
 
     function mint(address to, uint256 amount) external;
 

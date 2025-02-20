@@ -2,11 +2,12 @@
 pragma solidity ^0.8.20;
 
 import {IPool} from "src/interface/IPool.sol";
-import {WETHGateway} from "./modules/_WETHGateway.sol";
+import {WETHGateway} from "./modules/pool/_WETHGateway.sol";
+import {CalculationsInitParams} from "./modules/pool/_Calculations.sol";
 
 import {ArrayLib, INDEX_NOT_FOUND} from "src/lib/ArrayLib.sol";
 
-import {CalculationsInitParams} from "./modules/_Calculations.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @notice Pool contract
 /// @dev Inheritance:
@@ -15,16 +16,16 @@ contract Pool is WETHGateway {
     using ArrayLib for address[];
 
     function initialize(
-        address _owner,
         address _provider,
         address _weth,
         address _debtShares,
         CalculationsInitParams memory params
     ) public initializer {
-        __Calculations_init(_owner, _debtShares, params);
-        __UUPSImplementation_init(_owner, _provider);
+        __Calculations_init(Ownable(_provider).owner(), _debtShares, params);
+        __ProviderKeeper_init(_provider);
         __WETHGateway_init(_weth);
-        _afterInitialize();
+
+        _registerInterface(type(IPool).interfaceId);
     }
 
     function supply(address token, uint256 amount)
@@ -203,13 +204,5 @@ contract Pool is WETHGateway {
         }
 
         _;
-    }
-
-    function initialize(address, address) public pure override {
-        revert DeprecatedInitializer();
-    }
-
-    function _afterInitialize() internal override {
-        _registerInterface(type(IPool).interfaceId);
     }
 }

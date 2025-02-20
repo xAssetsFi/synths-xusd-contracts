@@ -63,7 +63,7 @@ contract OnlyOwnerTest is Setup {
 
     function test_createSynth_revertIfNotOwner() public {
         _expectRevert();
-        exchanger.createSynth(a, a, s, s);
+        exchanger.createSynth(a, s, s);
     }
 
     function test_addNewSynth_revertIfNotOwner() public {

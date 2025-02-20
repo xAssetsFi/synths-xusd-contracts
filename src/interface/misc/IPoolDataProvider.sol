@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.20;
 
-import {IPool} from "./IPool.sol";
+import {IPool} from "../IPool.sol";
 
 /// @notice PoolDataProvider is a contract that provides data for the pool
 interface IPoolDataProvider {

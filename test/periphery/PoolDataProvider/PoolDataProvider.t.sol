@@ -54,7 +54,7 @@ contract PoolDataProviderTest is PoolDataProviderSetup {
 
         pool.borrow(maxBorrowBeforeBorrow, type(uint256).max, address(this));
 
-        diaOracle.setValue("USDC/USD", 1, uint128(block.timestamp));
+        diaOracle.setValue("USDC/USD", 1);
 
         assertLt(
             poolDataProvider.getHealthFactor(address(this)), pool.getMinHealthFactorForBorrow()
@@ -192,7 +192,7 @@ contract PoolDataProviderTest is PoolDataProviderSetup {
         assertEq(tokens[1], address(0));
         assertEq(shares[1], 0);
 
-        diaOracle.setValue("USDC/USD", 1e7, uint128(block.timestamp));
+        diaOracle.setValue("USDC/USD", 1e7);
 
         (tokens, shares) = poolDataProvider.findLiquidationOpportunity(users);
 
@@ -205,7 +205,7 @@ contract PoolDataProviderTest is PoolDataProviderSetup {
         assertEq(tokens[1], address(0));
         assertEq(shares[1], 0);
 
-        diaOracle.setValue("WBTC/USD", uint128(1), uint128(block.timestamp));
+        diaOracle.setValue("WBTC/USD", uint128(1));
 
         (tokens, shares) = poolDataProvider.findLiquidationOpportunity(users);
 

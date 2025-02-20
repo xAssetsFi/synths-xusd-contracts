@@ -3,8 +3,6 @@ pragma solidity ^0.8.20;
 
 import "./_SynthDataProvider.Setup.sol";
 
-import {ISynthDataProvider} from "src/interface/platforms/synths/ISynthDataProvider.sol";
-
 contract SynthDataProviderTest is SynthDataProviderSetup {
     function test_synthData() public view {
         ISynthDataProvider.SynthData[] memory data = synthDataProvider.synthsData(address(this));

@@ -1,18 +1,24 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.20;
 
-import {UUPSImplementation} from "src/common/_UUPSImplementation.sol";
+import {ProviderKeeperUpgradeable} from "src/common/_ProviderKeeperUpgradeable.sol";
 
 import {ISynth} from "src/interface/platforms/synths/ISynth.sol";
 import {IPool} from "src/interface/IPool.sol";
-import {ISynthDataProvider} from "src/interface/platforms/synths/ISynthDataProvider.sol";
+import {ISynthDataProvider} from "src/interface/misc/ISynthDataProvider.sol";
 
 import {IExchanger} from "src/interface/platforms/synths/IExchanger.sol";
 
 import {PoolArrayLib} from "src/lib/PoolArrayLib.sol";
 
-contract SynthDataProvider is ISynthDataProvider, UUPSImplementation {
+contract SynthDataProvider is ISynthDataProvider, ProviderKeeperUpgradeable {
     using PoolArrayLib for IPool.CollateralData[];
+
+    function initialize(address provider) public initializer {
+        __ProviderKeeper_init(provider);
+
+        _registerInterface(type(ISynthDataProvider).interfaceId);
+    }
 
     function aggregateSynthData(address user)
         public
@@ -73,9 +79,5 @@ contract SynthDataProvider is ISynthDataProvider, UUPSImplementation {
         returns (uint256 amountOut)
     {
         return provider().exchanger().previewSwap(synthIn, synthOut, amountIn);
-    }
-
-    function _afterInitialize() internal override {
-        _registerInterface(type(ISynthDataProvider).interfaceId);
     }
 }

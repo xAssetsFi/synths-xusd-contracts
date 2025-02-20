@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.20;
 
-import {UUPSImplementation} from "src/common/_UUPSImplementation.sol";
+import {ProviderKeeperUpgradeable} from "src/common/_ProviderKeeperUpgradeable.sol";
 
 import {IDiaOracleAdapter} from "src/interface/IDiaOracleAdapter.sol";
 import {IDIAOracleV2} from "src/interface/external/IDIAOracleV2.sol";
 import {IOracleAdapter} from "src/interface/IOracleAdapter.sol";
 
-contract DiaOracleAdapter is IDiaOracleAdapter, UUPSImplementation {
+contract DiaOracleAdapter is IDiaOracleAdapter, ProviderKeeperUpgradeable {
     IDIAOracleV2 public diaOracle;
 
     IOracleAdapter public fallbackOracle;
@@ -16,14 +16,15 @@ contract DiaOracleAdapter is IDiaOracleAdapter, UUPSImplementation {
 
     uint256 public constant PRICE_FRESHNESS = 12 hours;
 
-    function initialize(address _owner, address _provider, address _diaOracle)
+    function initialize(address _provider, address _diaOracle)
         public
         initializer
         noZeroAddress(_diaOracle)
     {
-        __UUPSImplementation_init(_owner, _provider);
+        __ProviderKeeper_init(_provider);
         diaOracle = IDIAOracleV2(_diaOracle);
-        _afterInitialize();
+
+        _registerInterface(type(IOracleAdapter).interfaceId);
     }
 
     /* ======== External Functions ======== */
@@ -75,9 +76,5 @@ contract DiaOracleAdapter is IDiaOracleAdapter, UUPSImplementation {
 
     function precision() public pure returns (uint256) {
         return 1e8;
-    }
-
-    function _afterInitialize() internal override {
-        _registerInterface(type(IOracleAdapter).interfaceId);
     }
 }

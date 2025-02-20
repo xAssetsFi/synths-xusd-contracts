@@ -2,10 +2,12 @@
 pragma solidity ^0.8.20;
 
 import {Script, console} from "forge-std/Script.sol";
-import {SynthDataProvider} from "../src/platforms/Synths/SynthDataProvider.sol";
-import {Exchanger} from "../src/platforms/Synths/Exchanger.sol";
-import {Pool} from "../src/core/pool/Pool.sol";
-import {PoolDataProvider} from "../src/periphery/PoolDataProvider.sol";
+
+import {Pool} from "../src/Pool.sol";
+import {Exchanger} from "../src/platforms/synths/Exchanger.sol";
+import {PoolDataProvider} from "../src/misc/PoolDataProvider.sol";
+import {SynthDataProvider} from "../src/misc/SynthDataProvider.sol";
+
 import {Fork} from "../utils/Fork.sol";
 import {FileUtils} from "../utils/FileHelpers.sol";
 

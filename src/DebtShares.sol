@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.20;
 
-import {Rewarder} from "./modules/_Rewarder.sol";
+import {Rewarder} from "./modules/debtShares/_Rewarder.sol";
 
 import {IDebtShares} from "src/interface/IDebtShares.sol";
 
@@ -34,23 +34,14 @@ contract DebtShares is Rewarder {
         _;
     }
 
-    function initialize(
-        address _owner,
-        address _provider,
-        string memory _name,
-        string memory _symbol
-    ) public initializer {
-        __UUPSImplementation_init(_owner, _provider);
+    function initialize(address _provider, string memory _name, string memory _symbol)
+        public
+        initializer
+    {
+        __ProviderKeeper_init(_provider);
         __ERC20_init(_name, _symbol);
         stageDistributionStarted = uint32(block.timestamp);
-        _afterInitialize();
-    }
 
-    function _afterInitialize() internal override {
         _registerInterface(type(IDebtShares).interfaceId);
-    }
-
-    function initialize(address, address) public override initializer {
-        revert DeprecatedInitializer();
     }
 }

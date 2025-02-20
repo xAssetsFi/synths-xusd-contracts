@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.20;
 
-import {UUPSImplementation} from "src/common/_UUPSImplementation.sol";
+import {ProviderKeeperUpgradeable} from "src/common/_ProviderKeeperUpgradeable.sol";
 
-import {IPoolDataProvider} from "src/interface/IPoolDataProvider.sol";
+import {IPoolDataProvider} from "src/interface/misc/IPoolDataProvider.sol";
 import {IPool} from "src/interface/IPool.sol";
 import {IOracleAdapter} from "src/interface/IOracleAdapter.sol";
 
@@ -11,8 +11,14 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 
 import {PoolArrayLib, INDEX_NOT_FOUND} from "src/lib/PoolArrayLib.sol";
 
-contract PoolDataProvider is IPoolDataProvider, UUPSImplementation {
+contract PoolDataProvider is IPoolDataProvider, ProviderKeeperUpgradeable {
     using PoolArrayLib for IPool.CollateralData[];
+
+    function initialize(address provider) public initializer {
+        __ProviderKeeper_init(provider);
+
+        _registerInterface(type(IPoolDataProvider).interfaceId);
+    }
 
     function getAggregatedPoolData(address user)
         external
@@ -337,9 +343,5 @@ contract PoolDataProvider is IPoolDataProvider, UUPSImplementation {
             IPool.CollateralData(params.collateralToken, uint256(params.collateralAmount));
 
         return newPosition;
-    }
-
-    function _afterInitialize() internal override {
-        _registerInterface(type(IPoolDataProvider).interfaceId);
     }
 }

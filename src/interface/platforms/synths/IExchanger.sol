@@ -110,15 +110,11 @@ interface IExchanger is IPlatform {
 
     /// @notice Create a new synth and call addNewSynth function
     /// @param implementation The address of the synth implementation
-    /// @param owner The address of the owner of the synth
     /// @param name The name of the synth
     /// @param symbol The symbol of the synth
-    function createSynth(
-        address implementation,
-        address owner,
-        string memory name,
-        string memory symbol
-    ) external returns (address);
+    function createSynth(address implementation, string memory name, string memory symbol)
+        external
+        returns (address);
 
     /* ======== Events ======== */
     event SynthAdded(address indexed synth);

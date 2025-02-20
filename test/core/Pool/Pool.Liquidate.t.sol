@@ -20,7 +20,7 @@ contract PoolLiquidateTest is PoolSetup {
             address(usdc), amountSupplied, amountBorrowed, type(uint256).max, address(this)
         );
 
-        diaOracle.setValue("USDC/USD", dePegUsdcPrice, uint128(block.timestamp));
+        diaOracle.setValue("USDC/USD", dePegUsdcPrice);
     }
 
     function testFuzz_liquidate(uint256 amount) public {
@@ -36,11 +36,11 @@ contract PoolLiquidateTest is PoolSetup {
     function testFuzz_liquidate_getDataFromPoolDataProvider(uint256 amount) public {
         vm.assume(amount > 0 && amount <= 1e18);
 
-        diaOracle.setValue("USDC/USD", uint128(oracleAdapter.precision()), uint128(block.timestamp));
+        diaOracle.setValue("USDC/USD", uint128(oracleAdapter.precision()));
 
         pool.supply(address(wxfi), amount);
 
-        diaOracle.setValue("USDC/USD", uint128(3.95e7), uint128(block.timestamp));
+        diaOracle.setValue("USDC/USD", uint128(3.95e7));
 
         address[] memory users = new address[](1);
         users[0] = address(this);
@@ -66,7 +66,7 @@ contract PoolLiquidateTest is PoolSetup {
     function test_stabilityFeeAccountInLiquidation() public {
         skip(1 weeks);
         _updateOraclePrice();
-        diaOracle.setValue("USDC/USD", dePegUsdcPrice, uint128(block.timestamp));
+        diaOracle.setValue("USDC/USD", dePegUsdcPrice);
 
         uint256 liquidationAmount = receiverShares / 2;
 
