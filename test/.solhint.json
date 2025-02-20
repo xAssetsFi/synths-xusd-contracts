@@ -12,6 +12,7 @@
     "no-global-import": "off",
     "func-visibility": "off",
     "state-visibility": "off",
+    "compiler-version": "off",
     "func-name-mixedcase": "off"
   }
 }

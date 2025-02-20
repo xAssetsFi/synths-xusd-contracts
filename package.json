@@ -2,7 +2,7 @@
   "scripts": {
     "prettier": "npx prettier . !docs/**/* !out/**/* !lib/**/* !deployments/**/* !broadcast/**/* --write",
     "prepare": "husky",
-    "lint": "solhint -c src/.solhint.json src/**/*.sol && solhint -c test/.solhint.json test/**/*.sol",
+    "lint": "solhint -c src/.solhint.json src/**/*.sol & solhint -c test/.solhint.json test/**/*.sol",
     "lint:fix": "solhint -c src/.solhint.json --fix --noPrompt src/**/*.sol && solhint -c test/.solhint.json --fix --noPrompt test/**/*.sol",
     "lint:src": "solhint -c src/.solhint.json src/**/*.sol",
     "lint:src:fix": "solhint -c src/.solhint.json --fix src/**/*.sol",
@@ -14,6 +14,7 @@
     "@openzeppelin/contracts-upgradeable": "^5.0.2"
   },
   "devDependencies": {
-    "husky": "^9.0.10"
+    "husky": "^9.0.10",
+    "solhint": "^5.0.4"
   }
 }
