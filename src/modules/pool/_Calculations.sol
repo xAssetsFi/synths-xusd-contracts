@@ -31,9 +31,26 @@ abstract contract Calculations is State {
         noZeroAddress(_feeReceiver)
         noZeroAddress(_debtShares)
         validInterface(_debtShares, type(IDebtShares).interfaceId)
+        validateLiquidationDeductions
+        lessThanPrecision(params.loanFee)
+        lessThanPrecision(params.stabilityFee)
+        greaterThanPrecision(params.collateralRatio)
+        greaterThanPrecision(params.liquidationRatio)
     {
-        collateralRatio = params.collateralRatio;
-        liquidationRatio = params.liquidationRatio;
+        ratioAdjustments["collateral"] = RatioAdjustment({
+            targetRatio: params.collateralRatio,
+            startRatio: 0,
+            startTime: 0,
+            duration: 0
+        });
+
+        ratioAdjustments["liquidation"] = RatioAdjustment({
+            targetRatio: params.liquidationRatio,
+            startRatio: 0,
+            startTime: 0,
+            duration: 0
+        });
+
         stabilityFee = params.stabilityFee;
         loanFee = params.loanFee;
         cooldownPeriod = params.cooldownPeriod;
@@ -55,7 +72,9 @@ abstract contract Calculations is State {
 
         uint256 totalDebt = convertToAssets(shares);
 
-        hf = Math.mulDiv(totalUsdCollateralValue, WAD, (totalDebt * liquidationRatio) / PRECISION);
+        hf = Math.mulDiv(
+            totalUsdCollateralValue, WAD, (totalDebt * getCurrentLiquidationRatio()) / PRECISION
+        );
     }
 
     function totalPositionCollateralValue(CollateralData[] memory collaterals)
@@ -100,40 +119,40 @@ abstract contract Calculations is State {
     }
 
     function getMinHealthFactorForBorrow() public view returns (uint256 hf) {
-        hf = Math.mulDiv(collateralRatio, WAD, liquidationRatio);
+        hf = Math.mulDiv(getCurrentCollateralRatio(), WAD, getCurrentLiquidationRatio());
     }
 
     function convertToAssets(uint256 shares) public view returns (uint256 assets) {
         uint256 xusdPrecision = 10 ** provider().xusd().decimals();
-        assets = Math.mulDiv(shares, pricePerShare() * xusdPrecision, WAD * WAD);
+        assets = Math.mulDiv(shares, pricePerShare() * xusdPrecision, WAD * WAD, Math.Rounding.Ceil);
     }
 
     function convertToShares(uint256 assets) public view returns (uint256 shares) {
         uint256 xusdPrecision = 10 ** provider().xusd().decimals();
-        shares = Math.mulDiv(assets, WAD * WAD, pricePerShare() * xusdPrecision);
+        shares = Math.mulDiv(assets, WAD * WAD, pricePerShare() * xusdPrecision, Math.Rounding.Ceil);
     }
 
-    function calculateDeductionsWhileLiquidation(address token, uint256 xusdAmount)
+    function calculateDeductionsWhileLiquidation(address collateralToken, uint256 xusdAmount)
         public
         view
         returns (uint256 base, uint256 bonus, uint256 penalty)
     {
-        uint256 tokenDecimalsDelta = 10 ** (18 - IERC20Metadata(token).decimals());
+        uint256 tokenDecimalsDelta =
+            10 ** (provider().xusd().decimals() - IERC20Metadata(collateralToken).decimals());
 
         IOracleAdapter oracle = provider().oracle();
 
-        uint256 collateralPrice = oracle.getPrice(token);
+        uint256 collateralPrice = oracle.getPrice(collateralToken);
         uint256 oraclePrecision = oracle.precision();
 
         // amount in collateral token, equivalent to amountXUSDToRepay
         base = Math.mulDiv(xusdAmount, oraclePrecision, collateralPrice) / tokenDecimalsDelta;
 
         // bonus for liquidator in collateral token
-        bonus = Math.mulDiv(base, liquidationBonusPercentagePoint, tokenDecimalsDelta) / PRECISION;
+        bonus = Math.mulDiv(base, liquidationBonusPercentagePoint, PRECISION);
 
         // penalty to platform due liquidation in collateral token
-        penalty =
-            Math.mulDiv(base, liquidationPenaltyPercentagePoint, tokenDecimalsDelta) / PRECISION;
+        penalty = Math.mulDiv(base, liquidationPenaltyPercentagePoint, PRECISION);
     }
 
     function calculateStabilityFee(address positionOwner)
@@ -154,5 +173,42 @@ abstract contract Calculations is State {
         stabilityFeeShares = Math.mulDiv(
             debtShares.balanceOf(positionOwner), stabilityFee * passedTime, 365 days * PRECISION
         );
+    }
+
+    function getCurrentCollateralRatio() public view returns (uint32) {
+        return uint32(_getCurrentRatio("collateral"));
+    }
+
+    function getCurrentLiquidationRatio() public view returns (uint32) {
+        return uint32(_getCurrentRatio("liquidation"));
+    }
+
+    function _getCurrentRatio(bytes32 key) internal view returns (uint256) {
+        RatioAdjustment memory adjustment = ratioAdjustments[key];
+        if (block.timestamp >= adjustment.startTime + adjustment.duration) {
+            return adjustment.targetRatio;
+        }
+        uint256 elapsed = block.timestamp - adjustment.startTime;
+        uint256 ratioDiff;
+        if (adjustment.targetRatio > adjustment.startRatio) {
+            ratioDiff = uint256(adjustment.targetRatio) - uint256(adjustment.startRatio);
+            return uint256(adjustment.startRatio)
+                + Math.mulDiv(ratioDiff, elapsed, adjustment.duration);
+        } else {
+            ratioDiff = uint256(adjustment.startRatio) - uint256(adjustment.targetRatio);
+            return uint256(adjustment.startRatio)
+                - Math.mulDiv(ratioDiff, elapsed, adjustment.duration);
+        }
+    }
+
+    modifier validateLiquidationDeductions() {
+        _;
+
+        uint32 totalLiquidationDeductions =
+            liquidationBonusPercentagePoint + liquidationPenaltyPercentagePoint;
+
+        if (totalLiquidationDeductions > (getCurrentLiquidationRatio() - PRECISION) / 2) {
+            revert LiquidationDeductionsTooHigh();
+        }
     }
 }

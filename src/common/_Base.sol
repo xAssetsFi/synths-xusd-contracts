@@ -3,12 +3,11 @@ pragma solidity ^0.8.20;
 
 import {Errors} from "src/common/_Errors.sol";
 
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {ERC165Registry, IERC165} from "src/common/_ERC165Registry.sol";
 
-abstract contract Base is Errors, Initializable, ERC165Registry {
-    uint256 constant WAD = 1e18;
-    uint256 constant PRECISION = 10000; // precision for percentage points (100% = 10000)
+abstract contract Base is Errors, ERC165Registry {
+    uint256 public constant WAD = 1e18;
+    uint256 public constant PRECISION = 100_00; // precision for percentage points (100% = 10000)
 
     /* ======== Modifiers ======== */
 
@@ -26,6 +25,16 @@ abstract contract Base is Errors, Initializable, ERC165Registry {
 
     modifier noZeroUint(uint256 amount) {
         if (amount == 0) revert ZeroAmount();
+        _;
+    }
+
+    modifier lessThanPrecision(uint256 value) {
+        if (value >= PRECISION) revert ValueTooHigh();
+        _;
+    }
+
+    modifier greaterThanPrecision(uint256 value) {
+        if (value <= PRECISION) revert ValueTooLow();
         _;
     }
 }

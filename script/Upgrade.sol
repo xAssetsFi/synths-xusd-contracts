@@ -2,10 +2,12 @@
 pragma solidity ^0.8.20;
 
 import {Script, console} from "forge-std/Script.sol";
-import {SynthDataProvider} from "../src/platforms/Synths/SynthDataProvider.sol";
-import {Exchanger} from "../src/platforms/Synths/Exchanger.sol";
-import {Pool} from "../src/core/pool/Pool.sol";
-import {PoolDataProvider} from "../src/periphery/PoolDataProvider.sol";
+
+import {Pool} from "../src/Pool.sol";
+import {Exchanger} from "../src/platforms/synths/Exchanger.sol";
+import {PoolDataProvider} from "../src/misc/PoolDataProvider.sol";
+import {SynthDataProvider} from "../src/misc/SynthDataProvider.sol";
+
 import {Fork} from "../utils/Fork.sol";
 import {FileUtils} from "../utils/FileHelpers.sol";
 
@@ -33,8 +35,6 @@ contract Upgrade is Script, Fork {
 
         SynthDataProvider.SynthData[] memory data =
             SynthDataProvider(synthDataProvider).synthsData(address(0x0));
-
-        console.log(data[0].name);
     }
 
     function upgradeExchanger() public {
@@ -55,8 +55,6 @@ contract Upgrade is Script, Fork {
         address poolDataProvider = fileUtils.readContractAddress(chainId, "poolDataProvider");
 
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
-
-        console.log(poolDataProvider);
 
         address newPoolDataProviderImpl = address(new PoolDataProvider());
 

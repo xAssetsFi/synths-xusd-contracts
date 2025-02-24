@@ -10,4 +10,6 @@ contract Errors {
     error OnPause();
     error InvalidInterface();
     error TransferFailed();
+    error ValueTooHigh();
+    error ValueTooLow();
 }

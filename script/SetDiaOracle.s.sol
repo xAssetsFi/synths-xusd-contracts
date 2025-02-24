@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Script, console} from "forge-std/Script.sol";
 import {FileUtils} from "../utils/FileHelpers.sol";
-import {DiaOracleAdapter} from "../src/periphery/DiaOracleAdapter.sol";
+import {DiaOracleAdapter} from "../src/DiaOracleAdapter.sol";
 import {Fork} from "../utils/Fork.sol";
 
 contract SetDiaOracle is Script, Fork {

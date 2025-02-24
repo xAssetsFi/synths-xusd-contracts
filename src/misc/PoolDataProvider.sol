@@ -1,18 +1,24 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.20;
 
-import {UUPSProxy} from "src/common/_UUPSProxy.sol";
+import {ProviderKeeperUpgradeable} from "src/common/_ProviderKeeperUpgradeable.sol";
 
-import {IPoolDataProvider} from "src/interface/IPoolDataProvider.sol";
+import {IPoolDataProvider} from "src/interface/misc/IPoolDataProvider.sol";
 import {IPool} from "src/interface/IPool.sol";
 import {IOracleAdapter} from "src/interface/IOracleAdapter.sol";
 
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import {PoolArrayLib} from "src/lib/PoolArrayLib.sol";
+import {PoolArrayLib, INDEX_NOT_FOUND} from "src/lib/PoolArrayLib.sol";
 
-contract PoolDataProvider is IPoolDataProvider, UUPSProxy {
+contract PoolDataProvider is IPoolDataProvider, ProviderKeeperUpgradeable {
     using PoolArrayLib for IPool.CollateralData[];
+
+    function initialize(address provider) public initializer {
+        __ProviderKeeper_init(provider);
+
+        _registerInterface(type(IPoolDataProvider).interfaceId);
+    }
 
     function getAggregatedPoolData(address user)
         external
@@ -34,8 +40,8 @@ contract PoolDataProvider is IPoolDataProvider, UUPSProxy {
             pool.pricePerShare(),
             pool.debtShares().totalSupply(),
             pool.getMinHealthFactorForBorrow(),
-            pool.liquidationRatio(),
-            pool.collateralRatio(),
+            pool.getCurrentLiquidationRatio(),
+            pool.getCurrentCollateralRatio(),
             pool.cooldownPeriod(),
             pool.loanFee(),
             pool.stabilityFee(),
@@ -70,16 +76,16 @@ contract PoolDataProvider is IPoolDataProvider, UUPSProxy {
 
         IPool.Position memory position = pool.getPosition(user);
 
-        int8 index = position.collaterals.getIndex(params.collateralToken);
+        uint256 index = position.collaterals.indexOf(params.collateralToken);
 
         if (params.collateralAmount > 0) {
-            if (index == -1) {
+            if (index == INDEX_NOT_FOUND) {
                 position = _copyPositionAndPushCollateral(position, params);
             } else {
                 position.collaterals[uint8(index)].amount += uint256(params.collateralAmount);
             }
         } else if (params.collateralAmount < 0) {
-            position.collaterals[uint8(index)].amount -=
+            position.collaterals[index].amount -=
                 type(uint256).max - uint256(params.collateralAmount) + 1;
         }
 
@@ -112,7 +118,7 @@ contract PoolDataProvider is IPoolDataProvider, UUPSProxy {
             (
                 (
                     ((collateralValue * 10 ** provider().xusd().decimals()) * PRECISION)
-                        / pool.collateralRatio()
+                        / pool.getCurrentCollateralRatio()
                 )
             ) / WAD
         );
@@ -132,12 +138,12 @@ contract PoolDataProvider is IPoolDataProvider, UUPSProxy {
 
         IPool.Position memory position = pool.getPosition(user);
 
-        uint8 index = uint8(position.collaterals.getIndex(token));
+        uint256 index = position.collaterals.indexOf(token);
 
         uint256 _totalCollateralValue = pool.totalPositionCollateralValue(position.collaterals);
 
         uint256 _totalXUSDDebt = pool.convertToAssets(pool.debtShares().balanceOf(user));
-        uint256 _collateralRatio = pool.collateralRatio();
+        uint256 _collateralRatio = pool.getCurrentCollateralRatio();
 
         if (_totalCollateralValue <= (_totalXUSDDebt * _collateralRatio) / PRECISION) return (0, 0);
 
@@ -177,7 +183,7 @@ contract PoolDataProvider is IPoolDataProvider, UUPSProxy {
         uint256 xusdPrecision = 10 ** provider().xusd().decimals();
         uint256 oraclePrecision = oracle.precision();
 
-        uint256 liquidationRatio = pool.liquidationRatio();
+        uint256 liquidationRatio = pool.getCurrentLiquidationRatio();
 
         token = new address[](users.length);
         shares = new uint256[](users.length);
@@ -337,9 +343,5 @@ contract PoolDataProvider is IPoolDataProvider, UUPSProxy {
             IPool.CollateralData(params.collateralToken, uint256(params.collateralAmount));
 
         return newPosition;
-    }
-
-    function _afterInitialize() internal override {
-        _registerInterface(type(IPoolDataProvider).interfaceId);
     }
 }

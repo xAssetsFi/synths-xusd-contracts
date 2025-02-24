@@ -7,16 +7,16 @@ import {DeploymentSettings} from "./_Settings.sol";
 import {Deploy} from "../Deploy/Deploy.sol";
 import {FileUtils} from "../../utils/FileHelpers.sol";
 
-import {Provider} from "src/periphery/Provider.sol";
-import {Exchanger} from "src/platforms/Synths/Exchanger.sol";
-import {DiaOracleAdapter} from "src/periphery/DiaOracleAdapter.sol";
-import {Pool} from "src/core/pool/Pool.sol";
-import {Synth} from "src/platforms/Synths/Synth.sol";
-import {PoolDataProvider} from "src/periphery/PoolDataProvider.sol";
-import {SynthDataProvider} from "src/platforms/Synths/SynthDataProvider.sol";
-import {DebtShares} from "src/core/shares/DebtShares.sol";
-import {DiaOracle} from "src/mock/DiaOracle.sol";
-import {CalculationsInitParams} from "src/core/pool/modules/_Calculations.sol";
+import {Provider} from "src/Provider.sol";
+import {Exchanger} from "src/platforms/synths/Exchanger.sol";
+import {DiaOracleAdapter} from "src/DiaOracleAdapter.sol";
+import {Pool} from "src/Pool.sol";
+import {Synth} from "src/platforms/synths/Synth.sol";
+import {PoolDataProvider} from "src/misc/PoolDataProvider.sol";
+import {SynthDataProvider} from "src/misc/SynthDataProvider.sol";
+import {DebtShares} from "src/DebtShares.sol";
+import {DiaOracleMock} from "test/mock/DiaOracleMock.sol";
+import {CalculationsInitParams} from "src/modules/pool/_Calculations.sol";
 
 abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
     uint256 privateKey = vm.envUint("PRIVATE_KEY");
@@ -37,7 +37,6 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
         returns (Exchanger exchanger)
     {
         exchanger = _deployExchanger(
-            owner,
             address(provider),
             exchangerSettings.swapFee,
             exchangerSettings.rewarderFee,
@@ -70,19 +69,20 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
         string memory name,
         string memory symbol
     ) internal BroadcastAndWrite(symbol) returns (Synth synth) {
-        synth = _createSynth(address(synthImplementation), owner, address(provider), name, symbol);
+        synth = _createSynth(address(synthImplementation), address(provider), name, symbol);
 
         addressToWrite = address(synth);
 
         return synth;
     }
 
-    function _deployDiaOracle(string[] memory keys, uint256[] memory prices)
+    function _deployDiaOracle(string[] memory keys, uint128[] memory prices)
         internal
         BroadcastAndWrite("diaOracle")
-        returns (DiaOracle _diaOracle)
+        returns (DiaOracleMock _diaOracle)
     {
-        _diaOracle = new DiaOracle(keys, prices);
+        _diaOracle = new DiaOracleMock();
+        _diaOracle.setValues(keys, prices);
 
         addressToWrite = address(_diaOracle);
 
@@ -94,7 +94,7 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
         BroadcastAndWrite("debtShares")
         returns (DebtShares debtShares)
     {
-        debtShares = _deployDebtShares(owner, address(provider), "xAssets debt shares", "xDS");
+        debtShares = _deployDebtShares(address(provider), "xAssets debt shares", "xDS");
 
         debtShares.addRewardToken(address(xusd));
 
@@ -118,7 +118,7 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
             cooldownPeriod: poolSettings.cooldownPeriod
         });
 
-        pool = _deployPool(owner, address(provider), wxfi, address(debtShares), params);
+        pool = _deployPool(address(provider), wxfi, address(debtShares), params);
 
         provider.setPool(address(pool));
 
@@ -132,7 +132,7 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
         BroadcastAndWrite("oracleAdapter")
         returns (DiaOracleAdapter oracleAdapter)
     {
-        oracleAdapter = _deployDiaOracleAdapter(owner, address(provider), _diaOracle);
+        oracleAdapter = _deployDiaOracleAdapter(address(provider), _diaOracle);
 
         provider.setOracle(address(oracleAdapter));
 
@@ -146,7 +146,7 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
         BroadcastAndWrite("poolDataProvider")
         returns (PoolDataProvider poolDataProvider)
     {
-        poolDataProvider = _deployPoolDataProvider(owner, address(provider));
+        poolDataProvider = _deployPoolDataProvider(address(provider));
 
         addressToWrite = address(poolDataProvider);
 
@@ -158,7 +158,7 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
         BroadcastAndWrite("synthDataProvider")
         returns (SynthDataProvider synthDataProvider)
     {
-        synthDataProvider = _deploySynthDataProvider(owner, address(provider));
+        synthDataProvider = _deploySynthDataProvider(address(provider));
 
         addressToWrite = address(synthDataProvider);
 
@@ -170,7 +170,7 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
         BroadcastAndWrite("xusd")
         returns (Synth xusd)
     {
-        xusd = _deployXUSD(owner, address(provider), "XUSD", "XUSD");
+        xusd = _deployXUSD(address(provider), "XUSD", "XUSD");
 
         provider.setXUSD(address(xusd));
 

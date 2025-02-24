@@ -8,8 +8,8 @@ import {ISynth} from "src/interface/platforms/synths/ISynth.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import {PoolArrayLib} from "src/lib/PoolArrayLib.sol";
-import {Math as OZMathLib} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {PoolArrayLib, INDEX_NOT_FOUND} from "src/lib/PoolArrayLib.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 abstract contract Position is Calculations {
     using SafeERC20 for IERC20;
@@ -20,9 +20,9 @@ abstract contract Position is Calculations {
         Position storage position = _positions[msg.sender];
 
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
-        int8 index = position.collaterals.getIndex(token);
+        uint256 index = position.collaterals.indexOf(token);
 
-        if (index == -1) {
+        if (index == INDEX_NOT_FOUND) {
             position.collaterals.push(CollateralData(token, amount));
         } else {
             position.collaterals[uint8(index)].amount += amount;
@@ -36,13 +36,15 @@ abstract contract Position is Calculations {
     function _withdraw(address token, uint256 amount, address to) internal noZeroUint(amount) {
         Position storage position = _positions[msg.sender];
 
-        int8 index = position.collaterals.getIndex(token);
-        if (index == -1) revert NotCollateralToken();
+        uint256 index = position.collaterals.indexOf(token);
+        if (index == INDEX_NOT_FOUND) revert NotCollateralToken();
 
-        position.collaterals[uint8(index)].amount -= amount;
+        CollateralData storage collateral = position.collaterals[uint8(index)];
+
+        collateral.amount -= amount;
         IERC20(token).safeTransfer(to, amount);
 
-        if (position.collaterals[uint8(index)].amount == 0) {
+        if (collateral.amount == 0) {
             position.collaterals.remove(token);
         }
 
@@ -51,8 +53,10 @@ abstract contract Position is Calculations {
         emit Withdraw(msg.sender, token, amount, to, !isPositionExist(msg.sender));
     }
 
-    function _repay(uint256 shares) internal noZeroUint(shares) {
+    function _repay(uint256 shares, uint256 maxXusdAmount) internal noZeroUint(shares) {
         uint256 xusdAmount = convertToAssets(shares);
+
+        if (xusdAmount > maxXusdAmount) revert RepayAmountTooHigh(xusdAmount, maxXusdAmount);
 
         debtShares.burn(msg.sender, shares);
 
@@ -63,14 +67,23 @@ abstract contract Position is Calculations {
         emit Repay(msg.sender, xusdAmount, debtShares.balanceOf(msg.sender));
     }
 
-    function _borrow(uint256 xusdAmount, address to) internal noZeroUint(xusdAmount) {
-        debtShares.mint(msg.sender, convertToShares(xusdAmount));
+    function _borrow(uint256 xusdAmount, uint256 maxDebtShares, address to)
+        internal
+        noZeroUint(xusdAmount)
+    {
+        uint256 debtSharesToMint = convertToShares(xusdAmount);
+
+        if (debtSharesToMint > maxDebtShares) {
+            revert DebtSharesTooHigh(debtSharesToMint, maxDebtShares);
+        }
+
+        debtShares.mint(msg.sender, debtSharesToMint);
 
         _checkHealthFactor(msg.sender, getMinHealthFactorForBorrow());
 
         ISynth xusd = provider().xusd();
 
-        uint256 fee = OZMathLib.mulDiv(xusdAmount, loanFee, PRECISION);
+        uint256 fee = Math.mulDiv(xusdAmount, loanFee, PRECISION);
 
         xusd.mint(to, xusdAmount - fee);
         xusd.mint(feeReceiver, fee);
@@ -80,10 +93,13 @@ abstract contract Position is Calculations {
         emit Borrow(msg.sender, xusdAmount, to);
     }
 
-    function _liquidate(address positionOwner, address collateralToken, uint256 shares, address to)
-        internal
-        noZeroUint(shares)
-    {
+    function _liquidate(
+        address positionOwner,
+        address collateralToken,
+        uint256 minTokenAmount,
+        uint256 shares,
+        address to
+    ) internal noZeroUint(shares) {
         Position storage position = _positions[positionOwner];
 
         ISynth xusd = provider().xusd();
@@ -95,13 +111,18 @@ abstract contract Position is Calculations {
         (uint256 base, uint256 bonus, uint256 penalty) =
             calculateDeductionsWhileLiquidation(collateralToken, xusdAmount);
 
-        uint8 i = uint8(position.collaterals.getIndex(collateralToken));
+        uint256 i = position.collaterals.indexOf(collateralToken);
+        uint256 totalTokenAmount = base + bonus + penalty;
 
-        if (position.collaterals[i].amount < base + bonus + penalty) {
-            revert NotEnoughCollateral(base + bonus + penalty, position.collaterals[i].amount);
+        if (base + bonus < minTokenAmount) {
+            revert TokenAmountTooLow(base + bonus, minTokenAmount);
         }
 
-        position.collaterals[i].amount -= base + bonus + penalty;
+        if (position.collaterals[i].amount < totalTokenAmount) {
+            revert NotEnoughCollateral(totalTokenAmount, position.collaterals[i].amount);
+        }
+
+        position.collaterals[i].amount -= totalTokenAmount;
         IERC20(collateralToken).safeTransfer(to, base + bonus);
         IERC20(collateralToken).safeTransfer(feeReceiver, penalty);
 
@@ -139,9 +160,9 @@ abstract contract Position is Calculations {
 
         uint256 stabilityFeeShares = calculateStabilityFee(positionOwner);
 
-        position.lastChargedFeeTimestamp = block.timestamp;
-
         if (stabilityFeeShares > 0) {
+            position.lastChargedFeeTimestamp = block.timestamp;
+
             debtShares.mint(positionOwner, stabilityFeeShares);
 
             provider().xusd().mint(feeReceiver, convertToAssets(stabilityFeeShares));

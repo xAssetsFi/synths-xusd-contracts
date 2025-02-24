@@ -49,8 +49,9 @@ contract PoolWithdrawTest is PoolSetup {
     function testFuzz_withdraw_withBorrow(uint256 amount) public {
         vm.assume(amount > 0);
         vm.assume(amount <= amountSuppliedUSDC);
+        pool.setStabilityFee(0);
 
-        pool.borrow(1e18, address(this));
+        pool.borrow(1e18, type(uint256).max, address(this));
 
         uint256 healthFactorBefore = pool.getHealthFactor(address(this));
         uint256 balanceBefore = usdc.balanceOf(address(this));
@@ -63,7 +64,7 @@ contract PoolWithdrawTest is PoolSetup {
     }
 
     function test_withdraw_withBorrow_wholeAmountInOneCollateral() public {
-        pool.borrow(1e18, address(this));
+        pool.borrow(1e18, type(uint256).max, address(this));
 
         pool.withdraw(address(usdc), amountSuppliedUSDC, address(this));
 
@@ -78,16 +79,17 @@ contract PoolWithdrawTest is PoolSetup {
 
         address to = makeAddr("to");
 
-        pool.supplyETHAndBorrow{value: amount}(amount / 4, to);
-        pool.withdrawETH(amount / 4, to);
+        pool.supplyETH{value: amount}();
 
-        assertEq(to.balance, amount / 4);
+        pool.withdrawETH(amount, to);
+
+        assertEq(to.balance, amount);
     }
 
     function test_stabilityFeeAccountInWithdraw() public {
-        pool.borrow(1e18, address(this));
+        pool.borrow(1e18, type(uint256).max, address(this));
 
-        skip(1 weeks);
+        _skipAndUpdateOraclePrice(1 weeks);
 
         uint256 stabilityFeeBefore = pool.calculateStabilityFee(address(this));
         uint256 debtSharesBefore = debtShares.balanceOf(address(this));

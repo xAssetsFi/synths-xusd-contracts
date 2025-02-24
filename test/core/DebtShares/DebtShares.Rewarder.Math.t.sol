@@ -6,6 +6,7 @@ import "./_DebtShares.Setup.sol";
 contract DebtSharesRewarderMathTest is DebtSharesSetup {
     function _afterSetup() internal override {
         super._afterSetup();
+        exchanger.setFinishSwapDelay(0);
         exchanger.setSwapFee(0);
         exchanger.setBurntAtSwap(0);
         exchanger.setRewarderFee(PRECISION / 2);
@@ -18,6 +19,7 @@ contract DebtSharesRewarderMathTest is DebtSharesSetup {
         uint256 amountXUSD = 100 ether;
         _supplyAndBorrow(amountXUSD);
         _swap(address(xusd), address(tesla), amountXUSD);
+        _finishSwap(address(this), address(tesla));
 
         skip(period);
 
@@ -26,12 +28,13 @@ contract DebtSharesRewarderMathTest is DebtSharesSetup {
     }
 
     function testFuzz_earned_differentPeriods_oneUser(uint256 period) public {
-        vm.assume(period < debtShares.DURATION());
-        vm.assume(period > fuzzingDust);
+        vm.assume(period <= debtShares.DURATION());
+        // vm.assume(period > fuzzingDust);
 
         uint256 amountXUSD = 100 ether;
         _supplyAndBorrow(amountXUSD);
         _swap(address(xusd), address(tesla), amountXUSD);
+        _finishSwap(address(this), address(tesla));
 
         skip(period);
 
@@ -44,14 +47,18 @@ contract DebtSharesRewarderMathTest is DebtSharesSetup {
 
         uint256 amountXUSD = 100 ether;
         uint256 swapAmount = 50 ether;
+
         _supplyAndBorrow(amountXUSD);
+        _swap(address(xusd), address(tesla), swapAmount);
+        _finishSwap(address(this), address(tesla));
 
         vm.startPrank(user);
         _supplyAndBorrow(amountXUSD, user);
-        _swap(address(xusd), address(tesla), swapAmount, user);
-        vm.stopPrank();
-
-        _swap(address(xusd), address(tesla), swapAmount, address(this));
+        ERC20Token(address(xusd)).approve(address(exchanger), type(uint256).max);
+        exchanger.swap{value: exchanger.getFinishSwapFee()}(
+            address(xusd), address(tesla), swapAmount, 0, user
+        );
+        _finishSwap(user, address(tesla));
 
         skip(duration);
 
@@ -68,7 +75,9 @@ contract DebtSharesRewarderMathTest is DebtSharesSetup {
         uint256 swapAmount = 50 ether;
 
         _supplyAndBorrow(amountXUSDBeforeFee);
-        _swap(address(xusd), address(tesla), swapAmount, address(this));
+        _swap(address(xusd), address(tesla), swapAmount);
+        _finishSwap(address(this), address(tesla));
+
         assertEq(xusd.balanceOf(address(debtShares)), swapAmount / 2);
 
         skip(duration / 2);
@@ -87,8 +96,11 @@ contract DebtSharesRewarderMathTest is DebtSharesSetup {
 
         vm.startPrank(user);
         _supplyAndBorrow(amountXUSDBeforeFee, user);
-        _swap(address(xusd), address(tesla), swapAmount, user);
-        vm.stopPrank();
+        ERC20Token(address(xusd)).approve(address(exchanger), type(uint256).max);
+        exchanger.swap{value: exchanger.getFinishSwapFee()}(
+            address(xusd), address(tesla), swapAmount, 0, user
+        );
+        _finishSwap(user, address(tesla));
 
         skip(duration);
 

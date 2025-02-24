@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "test/Setup.sol";
 
-import {Provider} from "src/periphery/Provider.sol";
+import {Provider} from "src/Provider.sol";
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 

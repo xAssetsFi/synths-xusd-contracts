@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.20;
 
-import {IExchanger} from "./IExchanger.sol";
+import {IExchanger} from "../platforms/synths/IExchanger.sol";
 
 /// @notice SynthDataProvider is a contract that provides data for synths
 interface ISynthDataProvider {
@@ -30,7 +30,7 @@ interface ISynthDataProvider {
 
     struct UserSynthData {
         uint256 balance;
-        IExchanger.Settlement settlement;
+        IExchanger.PendingSwap pendingSwap;
     }
 
     function aggregateSynthData(address user) external view returns (AggregateSynthData memory);

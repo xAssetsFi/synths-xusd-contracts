@@ -16,7 +16,7 @@ contract PoolRepayTest is PoolSetup {
         super._afterSetup();
         pool.supply(address(wxfi), amountSuppliedXFI);
         pool.supply(address(usdc), amountSuppliedUSDC);
-        pool.borrow(amountBorrowed, address(this));
+        pool.borrow(amountBorrowed, type(uint256).max, address(this));
 
         amountSharesReceived = debtShares.balanceOf(address(this));
 
@@ -27,11 +27,12 @@ contract PoolRepayTest is PoolSetup {
     function testFuzz_repay_notFullAmount(uint256 amount) public {
         vm.assume(amount > 0);
         vm.assume(amount <= amountSharesReceived);
+        pool.setStabilityFee(0);
 
         uint256 balanceSharesBefore = debtShares.balanceOf(address(this));
         uint256 balanceXUSDBefore = xusd.balanceOf(address(this));
 
-        pool.repay(amount);
+        pool.repay(amount, type(uint256).max);
 
         uint256 balanceSharesAfter = debtShares.balanceOf(address(this));
         uint256 balanceXUSDAfter = xusd.balanceOf(address(this));
@@ -41,7 +42,8 @@ contract PoolRepayTest is PoolSetup {
     }
 
     function test_repay_wholeAmount() public {
-        pool.repay(amountSharesReceived);
+        pool.setStabilityFee(0);
+        pool.repay(amountSharesReceived, type(uint256).max);
 
         assertEq(xusd.balanceOf(address(this)), 0);
         assertEq(xusd.totalSupply(), 0);
@@ -53,7 +55,7 @@ contract PoolRepayTest is PoolSetup {
         vm.assume(amount > amountSharesReceived);
         vm.assume(amount != type(uint256).max);
 
-        pool.repay(amount);
+        pool.repay(amount, type(uint256).max);
 
         assertEq(debtShares.balanceOf(address(this)), 0);
     }
@@ -63,7 +65,7 @@ contract PoolRepayTest is PoolSetup {
         uint256 collateral0BalanceBefore =
             IERC20(position.collaterals[0].token).balanceOf(address(this));
 
-        pool.repay(type(uint256).max);
+        pool.repay(type(uint256).max, type(uint256).max);
 
         assertEq(debtShares.balanceOf(address(this)), 0);
 
@@ -77,12 +79,12 @@ contract PoolRepayTest is PoolSetup {
     }
 
     function test_stabilityFeeAccountInRepay() public {
-        skip(1 weeks);
+        _skipAndUpdateOraclePrice(1 weeks);
 
         uint256 stabilityFeeBefore = pool.calculateStabilityFee(address(this));
         uint256 debtSharesBefore = debtShares.balanceOf(address(this));
 
-        pool.repay(amountSharesReceived);
+        pool.repay(amountSharesReceived, type(uint256).max);
 
         uint256 stabilityFeeAfter = pool.calculateStabilityFee(address(this));
         uint256 debtSharesAfter = debtShares.balanceOf(address(this));
@@ -91,5 +93,10 @@ contract PoolRepayTest is PoolSetup {
         assertLt(stabilityFeeAfter, stabilityFeeBefore);
 
         assertGt(debtSharesAfter + amountSharesReceived, debtSharesBefore);
+    }
+
+    function test_repay_ShouldRevertIfDebtSharesTooHigh() public {
+        vm.expectPartialRevert(IPool.RepayAmountTooHigh.selector);
+        pool.repay(1e18, 0);
     }
 }

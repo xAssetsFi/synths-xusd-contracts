@@ -63,14 +63,14 @@ contract PoolSupplyTest is PoolSetup {
         assumeValidSupplyAmount(amount, wxfi)
     {
         uint256 borrowAmount = (amount * WAD) / pool.getMinHealthFactorForBorrow()
-            / pool.liquidationRatio() / PRECISION;
+            / pool.getCurrentLiquidationRatio() / PRECISION;
 
         vm.assume(borrowAmount > fuzzingDust);
 
         uint256 xusdAmountBefore = xusd.balanceOf(address(this));
         uint256 usdcAmountBefore = usdc.balanceOf(address(this));
 
-        pool.supplyAndBorrow(address(usdc), amount, borrowAmount, address(this));
+        pool.supplyAndBorrow(address(usdc), amount, borrowAmount, type(uint256).max, address(this));
 
         uint256 xusdAmountAfter = xusd.balanceOf(address(this));
         uint256 usdcAmountAfter = usdc.balanceOf(address(this));
@@ -109,7 +109,7 @@ contract PoolSupplyTest is PoolSetup {
         uint256 xusdAmountBefore = xusd.balanceOf(to);
         uint256 debtSharesAmountBefore = debtShares.balanceOf(address(this));
 
-        pool.supplyETHAndBorrow{value: collateral}(borrowAmount, to);
+        pool.supplyETHAndBorrow{value: collateral}(borrowAmount, type(uint256).max, to);
 
         uint256 xfiAmountAfter = address(this).balance;
         uint256 xusdAmountAfter = xusd.balanceOf(to);
@@ -133,9 +133,9 @@ contract PoolSupplyTest is PoolSetup {
         uint256 borrowedAmount = 100 ether;
 
         pool.supply(address(wxfi), 1000 ether);
-        pool.borrow(borrowedAmount, address(this));
+        pool.borrow(borrowedAmount, type(uint256).max, address(this));
 
-        skip(1 weeks);
+        _skipAndUpdateOraclePrice(1 weeks);
 
         uint256 stabilityFeeBefore = pool.calculateStabilityFee(address(this));
         uint256 debtSharesBefore = debtShares.balanceOf(address(this));
@@ -153,7 +153,7 @@ contract PoolSupplyTest is PoolSetup {
 
     function test_stabilityFeeDoNotIncreaseIfZeroDebt() public {
         pool.supply(address(wxfi), 100 ether);
-        skip(1 weeks);
+        _skipAndUpdateOraclePrice(1 weeks);
 
         uint256 stabilityFeeBefore = pool.calculateStabilityFee(address(this));
 

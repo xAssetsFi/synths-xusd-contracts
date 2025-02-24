@@ -1,26 +1,38 @@
-// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.20;
 
-library ArrayLib {
-    function remove(address[] storage array, address target) internal {
-        if (array.length == 1) array.pop();
+uint256 constant INDEX_NOT_FOUND = type(uint256).max;
 
-        for (uint256 i = 0; i < array.length; i++) {
-            if (array[i] == target) {
-                array[i] = array[array.length - 1];
+library ArrayLib {
+    function remove(address[] storage array, address addressToRemove) internal returns (bool) {
+        uint256 len = array.length;
+        for (uint256 i = 0; i < len; i++) {
+            if (array[i] == addressToRemove) {
+                if (len > 1) {
+                    array[i] = array[len - 1];
+                }
                 array.pop();
-                break;
+                return true;
             }
         }
+
+        return false;
     }
 
-    function getIndex(address[] memory array, address token) internal pure returns (int8) {
+    function indexOf(address[] memory array, address addressToFind)
+        internal
+        pure
+        returns (uint256)
+    {
         for (uint256 i = 0; i < array.length; i++) {
-            if (array[i] == token) {
-                return int8(uint8(i));
-            }
+            if (array[i] == addressToFind) return i;
         }
 
-        return -1;
+        return INDEX_NOT_FOUND;
+    }
+
+    function contain(address[] memory array, address addressToFind) internal pure returns (bool) {
+        return indexOf(array, addressToFind) != INDEX_NOT_FOUND;
     }
 }

@@ -2,21 +2,17 @@
 pragma solidity ^0.8.20;
 
 import {IDebtShares} from "src/interface/IDebtShares.sol";
-import {UUPSProxy} from "src/common/_UUPSProxy.sol";
-
 import {IPool} from "src/interface/IPool.sol";
-
 import {IWETH} from "src/interface/external/IWETH.sol";
 
-abstract contract State is UUPSProxy, IPool {
+import {ProviderKeeperUpgradeable} from "src/common/_ProviderKeeperUpgradeable.sol";
+
+abstract contract State is ProviderKeeperUpgradeable, IPool {
     IWETH public weth;
 
     IDebtShares public debtShares;
 
     address public feeReceiver;
-
-    uint32 public collateralRatio;
-    uint32 public liquidationRatio;
 
     uint32 public liquidationPenaltyPercentagePoint;
     uint32 public liquidationBonusPercentagePoint;
@@ -28,6 +24,8 @@ abstract contract State is UUPSProxy, IPool {
     uint32 public cooldownPeriod;
 
     mapping(address user => Position) internal _positions;
+
+    mapping(bytes32 => RatioAdjustment) public ratioAdjustments;
 
     mapping(address token => bool isCollateral) public isCollateralToken;
     address[] internal _collateralTokens;

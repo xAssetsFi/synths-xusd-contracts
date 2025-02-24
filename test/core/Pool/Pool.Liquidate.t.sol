@@ -11,19 +11,23 @@ contract PoolLiquidateTest is PoolSetup {
     uint256 amountBorrowed = 100 ether;
     uint256 receiverShares = 100 ether;
 
+    uint128 dePegUsdcPrice = 4e7 - 1;
+
     function _afterSetup() internal override {
         super._afterSetup();
 
-        pool.supplyAndBorrow(address(usdc), amountSupplied, amountBorrowed, address(this));
+        pool.supplyAndBorrow(
+            address(usdc), amountSupplied, amountBorrowed, type(uint256).max, address(this)
+        );
 
-        diaOracle.setValue("USDC/USD", uint128(4e7 - 1), uint128(block.timestamp));
+        diaOracle.setValue("USDC/USD", dePegUsdcPrice);
     }
 
     function testFuzz_liquidate(uint256 amount) public {
         vm.assume(amount > 1e4 && amount <= receiverShares / 2);
 
         uint256 hfBefore = pool.getHealthFactor(address(this));
-        pool.liquidate(address(this), address(usdc), amount, address(this));
+        pool.liquidate(address(this), address(usdc), 0, amount, address(this));
         uint256 hfAfter = pool.getHealthFactor(address(this));
 
         assertGt(hfAfter, hfBefore);
@@ -32,11 +36,11 @@ contract PoolLiquidateTest is PoolSetup {
     function testFuzz_liquidate_getDataFromPoolDataProvider(uint256 amount) public {
         vm.assume(amount > 0 && amount <= 1e18);
 
-        diaOracle.setValue("USDC/USD", uint128(oracleAdapter.precision()), uint128(block.timestamp));
+        diaOracle.setValue("USDC/USD", uint128(oracleAdapter.precision()));
 
         pool.supply(address(wxfi), amount);
 
-        diaOracle.setValue("USDC/USD", uint128(3.5e7), uint128(block.timestamp));
+        diaOracle.setValue("USDC/USD", uint128(3.95e7));
 
         address[] memory users = new address[](1);
         users[0] = address(this);
@@ -48,7 +52,7 @@ contract PoolLiquidateTest is PoolSetup {
         uint256 xusdAmountBefore = xusd.balanceOf(address(this));
         uint256 collateralAmountBefore = IERC20(tokens[0]).balanceOf(address(this));
 
-        pool.liquidate(address(this), tokens[0], shares[0], address(this));
+        pool.liquidate(address(this), tokens[0], 0, shares[0], address(this));
 
         uint256 hfAfter = pool.getHealthFactor(address(this));
         uint256 xusdAmountAfter = xusd.balanceOf(address(this));
@@ -61,13 +65,15 @@ contract PoolLiquidateTest is PoolSetup {
 
     function test_stabilityFeeAccountInLiquidation() public {
         skip(1 weeks);
+        _updateOraclePrice();
+        diaOracle.setValue("USDC/USD", dePegUsdcPrice);
 
         uint256 liquidationAmount = receiverShares / 2;
 
         uint256 stabilityFeeBefore = pool.calculateStabilityFee(address(this));
         uint256 debtSharesBefore = debtShares.balanceOf(address(this));
 
-        pool.liquidate(address(this), address(usdc), liquidationAmount, address(this));
+        pool.liquidate(address(this), address(usdc), 0, liquidationAmount, address(this));
 
         uint256 stabilityFeeAfter = pool.calculateStabilityFee(address(this));
         uint256 debtSharesAfter = debtShares.balanceOf(address(this));
@@ -76,5 +82,14 @@ contract PoolLiquidateTest is PoolSetup {
         assertLt(stabilityFeeAfter, stabilityFeeBefore);
 
         assertGt(debtSharesAfter + liquidationAmount, debtSharesBefore);
+    }
+
+    function test_liquidate_ShouldRevertIfMinAmountIsNotMet() public {
+        uint256 liquidationAmount = receiverShares / 2;
+
+        vm.expectPartialRevert(IPool.TokenAmountTooLow.selector);
+        pool.liquidate(
+            address(this), address(usdc), type(uint256).max, liquidationAmount, address(this)
+        );
     }
 }

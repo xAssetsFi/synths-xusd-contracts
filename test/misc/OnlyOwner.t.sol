@@ -63,7 +63,7 @@ contract OnlyOwnerTest is Setup {
 
     function test_createSynth_revertIfNotOwner() public {
         _expectRevert();
-        exchanger.createSynth(a, a, s, s);
+        exchanger.createSynth(a, s, s);
     }
 
     function test_addNewSynth_revertIfNotOwner() public {
@@ -76,9 +76,9 @@ contract OnlyOwnerTest is Setup {
         exchanger.removeSynth(a);
     }
 
-    function test_setSettlementDelay_revertIfNotOwner() public {
+    function test_setFinishSwapDelay_revertIfNotOwner() public {
         _expectRevert();
-        exchanger.setSettlementDelay(u);
+        exchanger.setFinishSwapDelay(u);
     }
 
     function test_setSwapFee_revertIfNotOwner() public {
@@ -132,12 +132,12 @@ contract OnlyOwnerTest is Setup {
 
     function test_setCollateralRatio_revertIfNotOwner() public {
         _expectRevert();
-        pool.setCollateralRatio(0);
+        pool.setCollateralRatio(0, 1 weeks);
     }
 
     function test_setLiquidationRatio_revertIfNotOwner() public {
         _expectRevert();
-        pool.setLiquidationRatio(0);
+        pool.setLiquidationRatio(0, 1 weeks);
     }
 
     function test_setLiquidationPenaltyPercentagePoint_revertIfNotOwner() public {

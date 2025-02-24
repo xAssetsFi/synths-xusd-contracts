@@ -54,4 +54,8 @@ interface IProvider {
     event PoolChanged(address previous, address current);
     event WethGatewayChanged(address previous, address current);
     event NewPlatform(address platform);
+    event PlatformRemoved(address platform);
+
+    error PlatformAlreadyAdded();
+    error PlatformNotFound();
 }

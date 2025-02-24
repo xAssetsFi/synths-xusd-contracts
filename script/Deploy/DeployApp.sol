@@ -9,14 +9,14 @@ import {DeploymentSettings} from "./_Settings.sol";
 import {FileUtils} from "../../utils/FileHelpers.sol";
 import {DeployComponents} from "./_DeployComponents.sol";
 
-import {Provider} from "src/periphery/Provider.sol";
-import {Exchanger} from "src/platforms/Synths/Exchanger.sol";
-import {DiaOracleAdapter} from "src/periphery/DiaOracleAdapter.sol";
-import {Pool} from "src/core/pool/Pool.sol";
-import {Synth} from "src/platforms/Synths/Synth.sol";
-import {PoolDataProvider} from "src/periphery/PoolDataProvider.sol";
-import {SynthDataProvider} from "src/platforms/Synths/SynthDataProvider.sol";
-import {DebtShares} from "src/core/shares/DebtShares.sol";
+import {Provider} from "src/Provider.sol";
+import {Exchanger} from "src/platforms/synths/Exchanger.sol";
+import {DiaOracleAdapter} from "src/DiaOracleAdapter.sol";
+import {Pool} from "src/Pool.sol";
+import {Synth} from "src/platforms/synths/Synth.sol";
+import {PoolDataProvider} from "src/misc/PoolDataProvider.sol";
+import {SynthDataProvider} from "src/misc/SynthDataProvider.sol";
+import {DebtShares} from "src/DebtShares.sol";
 
 abstract contract DeployApp is Script, Fork, DeploymentSettings, DeployComponents {
     Provider provider;

@@ -13,7 +13,7 @@ abstract contract Settings {
         address tokenAddress;
         string symbol;
         string name;
-        uint256 price;
+        uint128 price;
     }
 
     Asset[] assets;

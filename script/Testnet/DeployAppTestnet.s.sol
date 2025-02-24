@@ -9,22 +9,22 @@ import {Settings} from "./_Settings.sol";
 import {FileUtils} from "../../utils/FileHelpers.sol";
 import {DeployComponents} from "./_DeployComponents.sol";
 
-import {Provider} from "src/periphery/Provider.sol";
-import {Exchanger} from "src/platforms/Synths/Exchanger.sol";
-import {DiaOracleAdapter} from "src/periphery/DiaOracleAdapter.sol";
-import {Pool} from "src/core/pool/Pool.sol";
-import {Synth} from "src/platforms/Synths/Synth.sol";
-import {PoolDataProvider} from "src/periphery/PoolDataProvider.sol";
-import {SynthDataProvider} from "src/platforms/Synths/SynthDataProvider.sol";
-import {DebtShares} from "src/core/shares/DebtShares.sol";
-import {DiaOracle} from "src/mock/DiaOracle.sol";
+import {Provider} from "src/Provider.sol";
+import {Exchanger} from "src/platforms/synths/Exchanger.sol";
+import {DiaOracleAdapter} from "src/DiaOracleAdapter.sol";
+import {Pool} from "src/Pool.sol";
+import {Synth} from "src/platforms/synths/Synth.sol";
+import {PoolDataProvider} from "src/misc/PoolDataProvider.sol";
+import {SynthDataProvider} from "src/misc/SynthDataProvider.sol";
+import {DebtShares} from "src/DebtShares.sol";
+import {DiaOracleMock} from "test/mock/DiaOracleMock.sol";
 
 contract DeployAppTestnet is Script, Fork, Settings, DeployComponents {
     Provider provider;
     Exchanger exchanger;
     Synth xusd;
     Synth synthImplementation;
-    DiaOracle diaOracle;
+    DiaOracleMock diaOracle;
     DebtShares debtShares;
     Pool pool;
     DiaOracleAdapter oracleAdapter;
@@ -64,9 +64,9 @@ contract DeployAppTestnet is Script, Fork, Settings, DeployComponents {
 
     function _afterDeploy() internal virtual {}
 
-    function _deployAndSetupDiaOracle() internal returns (DiaOracle) {
+    function _deployAndSetupDiaOracle() internal returns (DiaOracleMock) {
         string[] memory keys = new string[](assets.length + collaterals.length + 1);
-        uint256[] memory prices = new uint256[](assets.length + collaterals.length + 1);
+        uint128[] memory prices = new uint128[](assets.length + collaterals.length + 1);
 
         for (uint256 i = 0; i < assets.length; i++) {
             string memory key = string.concat(assets[i].symbol, "/USD");

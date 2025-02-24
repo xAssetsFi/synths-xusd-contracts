@@ -11,7 +11,7 @@
   "comment separator for readability": {
     "prefix": "header comment",
     "body": ["/* ======== ${1:COMMENT} ======== */", "$0"],
-    "description": "print a comment block, which can be used to separate code into sections for readability",
+    "description": "print a comment block, which can be used to separate code into sections for readability"
   },
 
   /* ======== CONTRACTS ======== */
@@ -28,9 +28,9 @@
       "\t",
       "\t}",
       "\t$0",
-      "}",
+      "}"
     ],
-    "description": "print contract with license, pragma and empty constructor",
+    "description": "print contract with license, pragma and empty constructor"
   },
 
   "setup with import TestUtils": {
@@ -48,9 +48,9 @@
       "    }",
       "",
       "}",
-      "",
+      ""
     ],
-    "description": "print a setup for test contract (should use in _ContractName.Setup.sol file)",
+    "description": "print a setup for test contract (should use in _ContractName.Setup.sol file)"
   },
 
   "simple test with forge-std/Test.sol": {
@@ -69,9 +69,9 @@
       "        $0",
       "    }",
       "}",
-      "",
+      ""
     ],
-    "description": "print a simple test contract with forge-std/Test.sol",
+    "description": "print a simple test contract with forge-std/Test.sol"
   },
 
   "simple script with forge-std/Script.sol": {
@@ -89,8 +89,8 @@
       "        $0",
       "    }",
       "}",
-      "",
+      ""
     ],
-    "description": "print a script contract with forge-std/Script.sol",
-  },
+    "description": "print a script contract with forge-std/Script.sol"
+  }
 }

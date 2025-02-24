@@ -10,6 +10,7 @@ contract DebtSharesRewarderTest is DebtSharesSetup {
 
         _supplyAndBorrow(amountToBorrow);
         _swap(address(xusd), address(tesla), amountToBorrow);
+        _finishSwap(address(this), address(tesla));
 
         skip(debtShares.DURATION());
 
@@ -32,14 +33,15 @@ contract DebtSharesRewarderTest is DebtSharesSetup {
 
         _supplyAndBorrow(amountToBorrow);
         _swap(address(xusd), address(tesla), amountToBorrow);
+        _finishSwap(address(this), address(tesla));
 
-        skip(10 days);
+        _skipAndUpdateOraclePrice(10 days);
 
         uint256 earned = debtShares.earned(address(xusd), address(this));
 
         assertNotEq(earned, 0);
 
-        skip(10 days);
+        _skipAndUpdateOraclePrice(10 days);
 
         assertEq(debtShares.earned(address(xusd), address(this)), earned);
     }

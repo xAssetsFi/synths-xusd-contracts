@@ -1,3 +1,4 @@
-forge fmt
 npm run prettier
+npm run lint
+forge fmt
 forge test

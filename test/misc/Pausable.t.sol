@@ -36,17 +36,17 @@ contract PausableTest is Setup {
 
     function test_borrow_revertIfPaused() public {
         _expectRevert();
-        pool.borrow(0, a);
+        pool.borrow(0, type(uint256).max, a);
     }
 
     function test_repay_revertIfPaused() public {
         _expectRevert();
-        pool.repay(0);
+        pool.repay(0, type(uint256).max);
     }
 
     function test_liquidate_revertIfPaused() public {
         _expectRevert();
-        pool.liquidate(a, a, 0, a);
+        pool.liquidate(a, a, 0, 0, a);
     }
 
     function test_supplyETH_revertIfPaused() public {
@@ -61,19 +61,19 @@ contract PausableTest is Setup {
 
     function test_supplyAndBorrow_revertIfPaused() public {
         _expectRevert();
-        pool.supplyAndBorrow(a, 0, 0, a);
+        pool.supplyAndBorrow(a, 0, 0, type(uint256).max, a);
     }
 
     /* ======== EXCHANGER ======== */
 
     function test_swap_revertIfPaused() public {
         _expectRevert();
-        exchanger.swap(a, a, 0, a);
+        exchanger.swap(a, a, 0, 0, a);
     }
 
     function test_settle_revertIfPaused() public {
         _expectRevert();
-        exchanger.settle(a, a, a);
+        exchanger.finishSwap(a, a, a);
     }
 
     /* ======== INTERNAL ======== */

@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "test/Setup.sol";
 
-import {CalculationsInitParams} from "src/core/pool/modules/_Calculations.sol";
+import {CalculationsInitParams} from "src/modules/pool/_Calculations.sol";
 
 contract SettersTest is Setup {
     address a = makeAddr("a");
@@ -14,7 +14,7 @@ contract SettersTest is Setup {
     /* ======== PROVIDER ======== */
 
     function test_setExchanger() public {
-        Exchanger newExchanger = _deployExchanger(address(this), address(provider), 1, 1, 1, 1);
+        Exchanger newExchanger = _deployExchanger(address(provider), 1, 1, 1, 1);
 
         provider.setExchanger(address(newExchanger));
 
@@ -23,18 +23,16 @@ contract SettersTest is Setup {
 
     function test_setPool() public {
         CalculationsInitParams memory params = CalculationsInitParams({
-            collateralRatio: 1,
-            liquidationRatio: 1,
-            liquidationPenaltyPercentagePoint: 1,
-            liquidationBonusPercentagePoint: 1,
-            loanFee: 1,
-            stabilityFee: 1,
-            cooldownPeriod: 1
+            collateralRatio: 30000,
+            liquidationRatio: 12000,
+            liquidationPenaltyPercentagePoint: 500,
+            liquidationBonusPercentagePoint: 500,
+            loanFee: 100,
+            stabilityFee: 100,
+            cooldownPeriod: 3 minutes
         });
 
-        Pool newPool = _deployPool(
-            address(this), address(provider), address(wxfi), address(debtShares), params
-        );
+        Pool newPool = _deployPool(address(provider), address(wxfi), address(debtShares), params);
 
         provider.setPool(address(newPool));
 
@@ -42,8 +40,7 @@ contract SettersTest is Setup {
     }
 
     function test_setOracle() public {
-        DiaOracleAdapter newOracle =
-            _deployDiaOracleAdapter(address(this), address(provider), address(diaOracle));
+        DiaOracleAdapter newOracle = _deployDiaOracleAdapter(address(provider), address(diaOracle));
 
         provider.setOracle(address(newOracle));
 
@@ -51,7 +48,7 @@ contract SettersTest is Setup {
     }
 
     function test_setXUSD() public {
-        Synth newXUSD = _deployXUSD(address(this), address(provider), "xUSD", "xUSD");
+        Synth newXUSD = _deployXUSD(address(provider), "xUSD", "xUSD");
 
         provider.setXUSD(address(newXUSD));
 
@@ -60,9 +57,9 @@ contract SettersTest is Setup {
 
     /* ======== EXCHANGER ======== */
 
-    function test_setSettlementDelay() public {
-        exchanger.setSettlementDelay(u32);
-        assertEq(exchanger.settlementDelay(), u32);
+    function test_setFinishSwapDelay() public {
+        exchanger.setFinishSwapDelay(u32);
+        assertEq(exchanger.finishSwapDelay(), u32);
     }
 
     function test_setSwapFee() public {
@@ -99,7 +96,7 @@ contract SettersTest is Setup {
 
     function test_setFallbackOracle() public {
         DiaOracleAdapter fallbackOracle =
-            _deployDiaOracleAdapter(address(this), address(provider), address(diaOracle));
+            _deployDiaOracleAdapter(address(provider), address(diaOracle));
 
         oracleAdapter.setFallbackOracle(address(fallbackOracle));
 
@@ -109,13 +106,37 @@ contract SettersTest is Setup {
     /* ======== POOL ======== */
 
     function test_setCollateralRatio() public {
-        pool.setCollateralRatio(u32);
-        assertEq(pool.collateralRatio(), u32);
+        uint32 collateralRatioBefore = pool.getCurrentCollateralRatio();
+        uint32 collateralRatioAfter = 20000;
+
+        pool.setCollateralRatio(collateralRatioAfter, 1 weeks);
+        skip(1 weeks / 2);
+
+        assertEq(
+            pool.getCurrentCollateralRatio(),
+            collateralRatioBefore - (collateralRatioBefore - collateralRatioAfter) / 2
+        );
+
+        skip(1 weeks / 2);
+
+        assertEq(pool.getCurrentCollateralRatio(), collateralRatioAfter);
     }
 
     function test_setLiquidationRatio() public {
-        pool.setLiquidationRatio(u32);
-        assertEq(pool.liquidationRatio(), u32);
+        uint32 liquidationRatioBefore = pool.getCurrentLiquidationRatio();
+        uint32 liquidationRatioAfter = 24000;
+
+        pool.setLiquidationRatio(liquidationRatioAfter, 1 weeks);
+        skip(1 weeks / 2);
+
+        assertEq(
+            pool.getCurrentLiquidationRatio(),
+            liquidationRatioBefore + (liquidationRatioAfter - liquidationRatioBefore) / 2
+        );
+
+        skip(1 weeks / 2);
+
+        assertEq(pool.getCurrentLiquidationRatio(), liquidationRatioAfter);
     }
 
     function test_setLiquidationPenaltyPercentagePoint() public {

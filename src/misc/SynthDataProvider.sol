@@ -1,18 +1,24 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.20;
 
-import {UUPSProxy} from "src/common/_UUPSProxy.sol";
+import {ProviderKeeperUpgradeable} from "src/common/_ProviderKeeperUpgradeable.sol";
 
 import {ISynth} from "src/interface/platforms/synths/ISynth.sol";
 import {IPool} from "src/interface/IPool.sol";
-import {ISynthDataProvider} from "src/interface/platforms/synths/ISynthDataProvider.sol";
+import {ISynthDataProvider} from "src/interface/misc/ISynthDataProvider.sol";
 
 import {IExchanger} from "src/interface/platforms/synths/IExchanger.sol";
 
 import {PoolArrayLib} from "src/lib/PoolArrayLib.sol";
 
-contract SynthDataProvider is ISynthDataProvider, UUPSProxy {
+contract SynthDataProvider is ISynthDataProvider, ProviderKeeperUpgradeable {
     using PoolArrayLib for IPool.CollateralData[];
+
+    function initialize(address provider) public initializer {
+        __ProviderKeeper_init(provider);
+
+        _registerInterface(type(ISynthDataProvider).interfaceId);
+    }
 
     function aggregateSynthData(address user)
         public
@@ -23,10 +29,10 @@ contract SynthDataProvider is ISynthDataProvider, UUPSProxy {
 
         data = AggregateSynthData(
             synthsData(user),
-            exchanger.getSwapFeeForSettle(),
-            exchanger.settleFunctionGasCost(),
+            exchanger.getFinishSwapFee(),
+            exchanger.finishSwapGasCost(),
             block.basefee,
-            exchanger.settlementDelay(),
+            exchanger.finishSwapDelay(),
             exchanger.burntAtSwap(),
             exchanger.rewarderFee(),
             exchanger.swapFee(),
@@ -63,7 +69,7 @@ contract SynthDataProvider is ISynthDataProvider, UUPSProxy {
         returns (UserSynthData memory data)
     {
         data = UserSynthData(
-            ISynth(synth).balanceOf(user), provider().exchanger().getSettlement(user, synth)
+            ISynth(synth).balanceOf(user), provider().exchanger().getPendingSwap(user, synth)
         );
     }
 
@@ -73,9 +79,5 @@ contract SynthDataProvider is ISynthDataProvider, UUPSProxy {
         returns (uint256 amountOut)
     {
         return provider().exchanger().previewSwap(synthIn, synthOut, amountIn);
-    }
-
-    function _afterInitialize() internal override {
-        _registerInterface(type(ISynthDataProvider).interfaceId);
     }
 }
