@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.20;
 
-import {UUPSImplementation} from "src/common/_UUPSImplementation.sol";
+import {ProviderKeeperUpgradeable} from "src/common/_ProviderKeeperUpgradeable.sol";
 
 import {IExchanger} from "src/interface/platforms/synths/IExchanger.sol";
 import {IOracleAdapter} from "src/interface/IOracleAdapter.sol";
@@ -13,17 +13,17 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ArrayLib} from "src/lib/ArrayLib.sol";
 
-contract Exchanger is IExchanger, UUPSImplementation {
+contract Exchanger is IExchanger, ProviderKeeperUpgradeable {
     using Clones for address;
     using SafeERC20 for ISynth;
     using ArrayLib for address[];
 
-    address[] private _synths;
+    address[] internal _synths;
 
-    mapping(address user => mapping(address synthOut => PendingSwap)) private _pendingSwaps;
+    mapping(address user => mapping(address synthOut => PendingSwap)) internal _pendingSwaps;
 
     mapping(address => bool) public isSynth;
 
@@ -35,27 +35,22 @@ contract Exchanger is IExchanger, UUPSImplementation {
      * this shortfall is burned and is not considered a commission.
      * This is to decrease the total debt of users who have a debt position in pool contract.
      */
-    uint256 public burntAtSwap;
-
-    uint256 public rewarderFee;
-
-    uint256 public swapFee;
     address public feeReceiver;
-
+    uint256 public swapFee;
+    uint256 public burntAtSwap;
+    uint256 public rewarderFee;
     uint256 public finishSwapDelay;
-
     uint256 public finishSwapGasCost;
 
     function initialize(
-        address _owner,
         address _provider,
         uint256 _swapFee,
         uint256 _rewarderFee,
         uint256 _burntAtSwap,
         uint256 _finishSwapDelay
     ) public initializer {
-        __UUPSImplementation_init(_owner, _provider);
-        feeReceiver = _owner;
+        __ProviderKeeper_init(_provider);
+        feeReceiver = Ownable(_provider).owner();
 
         swapFee = _swapFee;
         burntAtSwap = _burntAtSwap;
@@ -64,7 +59,8 @@ contract Exchanger is IExchanger, UUPSImplementation {
 
         finishSwapGasCost = 200_000;
 
-        _afterInitialize();
+        _registerInterface(type(IPlatform).interfaceId);
+        _registerInterface(type(IExchanger).interfaceId);
     }
 
     /* ======== External Functions ======== */
@@ -268,14 +264,13 @@ contract Exchanger is IExchanger, UUPSImplementation {
 
     /* ======== Admin ======== */
 
-    function createSynth(
-        address _implementation,
-        address _owner,
-        string memory _name,
-        string memory _symbol
-    ) external onlyOwner returns (address) {
+    function createSynth(address _implementation, string memory _name, string memory _symbol)
+        external
+        onlyOwner
+        returns (address)
+    {
         address synth = _implementation.clone();
-        ISynth(synth).initialize(_owner, address(provider()), _name, _symbol);
+        ISynth(synth).initialize(address(provider()), _name, _symbol);
         _addNewSynth(synth);
         return synth;
     }
@@ -322,19 +317,10 @@ contract Exchanger is IExchanger, UUPSImplementation {
         emit RewarderFeeChanged(_rewarderFee);
     }
 
-    function initialize(address, address) public override initializer {
-        revert DeprecatedInitializer();
-    }
-
     function _addNewSynth(address _synth) internal {
         isSynth[_synth] = true;
         _synths.push(_synth);
         emit SynthAdded(_synth);
-    }
-
-    function _afterInitialize() internal override {
-        _registerInterface(type(IPlatform).interfaceId);
-        _registerInterface(type(IExchanger).interfaceId);
     }
 
     modifier validateFees() {

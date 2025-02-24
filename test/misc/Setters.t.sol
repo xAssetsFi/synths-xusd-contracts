@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "test/Setup.sol";
 
-import {CalculationsInitParams} from "src/core/pool/modules/_Calculations.sol";
+import {CalculationsInitParams} from "src/modules/pool/_Calculations.sol";
 
 contract SettersTest is Setup {
     address a = makeAddr("a");
@@ -14,7 +14,7 @@ contract SettersTest is Setup {
     /* ======== PROVIDER ======== */
 
     function test_setExchanger() public {
-        Exchanger newExchanger = _deployExchanger(address(this), address(provider), 1, 1, 1, 1);
+        Exchanger newExchanger = _deployExchanger(address(provider), 1, 1, 1, 1);
 
         provider.setExchanger(address(newExchanger));
 
@@ -32,9 +32,7 @@ contract SettersTest is Setup {
             cooldownPeriod: 3 minutes
         });
 
-        Pool newPool = _deployPool(
-            address(this), address(provider), address(wxfi), address(debtShares), params
-        );
+        Pool newPool = _deployPool(address(provider), address(wxfi), address(debtShares), params);
 
         provider.setPool(address(newPool));
 
@@ -42,8 +40,7 @@ contract SettersTest is Setup {
     }
 
     function test_setOracle() public {
-        DiaOracleAdapter newOracle =
-            _deployDiaOracleAdapter(address(this), address(provider), address(diaOracle));
+        DiaOracleAdapter newOracle = _deployDiaOracleAdapter(address(provider), address(diaOracle));
 
         provider.setOracle(address(newOracle));
 
@@ -51,7 +48,7 @@ contract SettersTest is Setup {
     }
 
     function test_setXUSD() public {
-        Synth newXUSD = _deployXUSD(address(this), address(provider), "xUSD", "xUSD");
+        Synth newXUSD = _deployXUSD(address(provider), "xUSD", "xUSD");
 
         provider.setXUSD(address(newXUSD));
 
@@ -99,7 +96,7 @@ contract SettersTest is Setup {
 
     function test_setFallbackOracle() public {
         DiaOracleAdapter fallbackOracle =
-            _deployDiaOracleAdapter(address(this), address(provider), address(diaOracle));
+            _deployDiaOracleAdapter(address(provider), address(diaOracle));
 
         oracleAdapter.setFallbackOracle(address(fallbackOracle));
 

@@ -38,7 +38,7 @@ contract ExchangerAdminTest is ExchangerSetup {
     function test_addNewSynth() public {
         vm.expectEmit(false, false, false, false);
         emit IExchanger.SynthAdded(address(0));
-        address synth = exchanger.createSynth(address(new Synth()), address(this), "Test", "TST");
+        address synth = exchanger.createSynth(address(new Synth()), "Test", "TST");
         assertEq(exchanger.isSynth(synth), true);
     }
 

@@ -9,8 +9,8 @@ contract DiaOracleAdapterFallbackOracleTest is DiaOracleAdapterSetup {
         _updateOraclePrice(_diaOracle);
         DiaOracleAdapter fallbackOracle = _createFallbackOracle(_diaOracle);
 
-        diaOracle.setValue("WBTC/USD", 0, uint128(block.timestamp));
-        _diaOracle.setValue("WBTC/USD", 1, uint128(block.timestamp));
+        diaOracle.setValue("WBTC/USD", 0);
+        _diaOracle.setValue("WBTC/USD", 1);
 
         oracleAdapter.setFallbackOracle(address(fallbackOracle));
 

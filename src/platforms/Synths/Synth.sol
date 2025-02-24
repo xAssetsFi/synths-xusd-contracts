@@ -6,9 +6,9 @@ import {ISynth} from "src/interface/platforms/synths/ISynth.sol";
 import {ERC20Upgradeable} from
     "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
-import {UUPSImplementation} from "src/common/_UUPSImplementation.sol";
+import {ProviderKeeperUpgradeable} from "src/common/_ProviderKeeperUpgradeable.sol";
 
-contract Synth is ISynth, UUPSImplementation, ERC20Upgradeable {
+contract Synth is ISynth, ProviderKeeperUpgradeable, ERC20Upgradeable {
     function mint(address to, uint256 amount) external checkAccess noZeroUint(amount) {
         _mint(to, amount);
     }
@@ -17,15 +17,14 @@ contract Synth is ISynth, UUPSImplementation, ERC20Upgradeable {
         _burn(from, amount);
     }
 
-    function initialize(
-        address _owner,
-        address _provider,
-        string memory _name,
-        string memory _symbol
-    ) public initializer {
-        __UUPSImplementation_init(_owner, _provider);
+    function initialize(address _provider, string memory _name, string memory _symbol)
+        public
+        initializer
+    {
+        __ProviderKeeper_init(_provider);
         __ERC20_init(_name, _symbol);
-        _afterInitialize();
+
+        _registerInterface(type(ISynth).interfaceId);
     }
 
     /**
@@ -46,13 +45,5 @@ contract Synth is ISynth, UUPSImplementation, ERC20Upgradeable {
         }
 
         _;
-    }
-
-    function initialize(address, address) public pure override {
-        revert DeprecatedInitializer();
-    }
-
-    function _afterInitialize() internal override {
-        _registerInterface(type(ISynth).interfaceId);
     }
 }

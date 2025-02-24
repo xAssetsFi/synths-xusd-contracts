@@ -5,8 +5,8 @@ import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.
 
 import {DeployAppTestnet} from "../Testnet/DeployAppTestnet.s.sol";
 
-import {WETH} from "test/_Mock/WETH.sol";
-import {ERC20Token, USDC} from "test/_Mock/ERC20Token.sol";
+import {WETH} from "test/mock/WETH.sol";
+import {ERC20Token, USDC} from "test/mock/ERC20Token.sol";
 
 contract DeployForLiquidatorTests is DeployAppTestnet {
     function setUp() public virtual override {

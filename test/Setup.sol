@@ -1,21 +1,26 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.20;
 
-import {Provider} from "src/periphery/Provider.sol";
-import {Exchanger} from "src/platforms/Synths/Exchanger.sol";
-import {DiaOracleAdapter} from "src/periphery/DiaOracleAdapter.sol";
-import {Pool} from "src/core/pool/Pool.sol";
-import {Synth} from "src/platforms/Synths/Synth.sol";
-import {DebtShares} from "src/core/shares/DebtShares.sol";
-import {PoolDataProvider} from "src/periphery/PoolDataProvider.sol";
-import {SynthDataProvider} from "src/platforms/Synths/SynthDataProvider.sol";
-import {CalculationsInitParams} from "src/core/pool/modules/_Calculations.sol";
+import "./TestUtils.sol";
+
+import {Pool} from "src/Pool.sol";
+import {Provider} from "src/Provider.sol";
+import {DebtShares} from "src/DebtShares.sol";
+import {DiaOracleAdapter} from "src/DiaOracleAdapter.sol";
+
+import {Exchanger} from "src/platforms/synths/Exchanger.sol";
+import {Synth} from "src/platforms/synths/Synth.sol";
+
+import {PoolDataProvider} from "src/misc/PoolDataProvider.sol";
+import {SynthDataProvider} from "src/misc/SynthDataProvider.sol";
+
+import {CalculationsInitParams} from "src/modules/pool/_Calculations.sol";
+
 import {Deploy} from "../script/Deploy/Deploy.sol";
 
-import "./TestUtils.sol";
-import {DiaOracleMock} from "./_Mock/DiaOracleMock.sol";
-import {ERC20Token, USDC} from "./_Mock/ERC20Token.sol";
-import {WETH} from "./_Mock/WETH.sol";
+import {WETH} from "./mock/WETH.sol";
+import {DiaOracleMock} from "./mock/DiaOracleMock.sol";
+import {ERC20Token, USDC} from "./mock/ERC20Token.sol";
 
 contract Setup is TestUtils, Deploy {
     Pool public pool;
@@ -47,9 +52,8 @@ contract Setup is TestUtils, Deploy {
         wxfi = new WETH();
 
         provider = _deployProvider(address(this));
-        exchanger = _deployExchanger(address(this), address(provider), 50, 50, 100, 3 minutes);
-        debtShares =
-            _deployDebtShares(address(this), address(provider), "xAssets debt shares", "xDS");
+        exchanger = _deployExchanger(address(provider), 50, 50, 100, 3 minutes);
+        debtShares = _deployDebtShares(address(provider), "xAssets debt shares", "xDS");
 
         CalculationsInitParams memory params = CalculationsInitParams({
             collateralRatio: 30000, // 300%
@@ -61,19 +65,16 @@ contract Setup is TestUtils, Deploy {
             cooldownPeriod: 3 minutes
         });
 
-        pool = _deployPool(
-            address(this), address(provider), address(wxfi), address(debtShares), params
-        );
-        oracleAdapter =
-            _deployDiaOracleAdapter(address(this), address(provider), address(diaOracle));
-        poolDataProvider = _deployPoolDataProvider(address(this), address(provider));
-        synthDataProvider = _deploySynthDataProvider(address(this), address(provider));
+        pool = _deployPool(address(provider), address(wxfi), address(debtShares), params);
+        oracleAdapter = _deployDiaOracleAdapter(address(provider), address(diaOracle));
+        poolDataProvider = _deployPoolDataProvider(address(provider));
+        synthDataProvider = _deploySynthDataProvider(address(provider));
 
         provider.setExchanger(address(exchanger));
         provider.setPool(address(pool));
         provider.setOracle(address(oracleAdapter));
 
-        xusd = _deployXUSD(address(this), address(provider), "XUSD", "XUSD");
+        xusd = _deployXUSD(address(provider), "XUSD", "XUSD");
 
         provider.setXUSD(address(xusd));
 
@@ -105,13 +106,13 @@ contract Setup is TestUtils, Deploy {
     function _updateOraclePrice(DiaOracleMock _diaOracle) internal {
         uint128 p = uint128(1e8);
 
-        _diaOracle.setValue("XFI/USD", (75 * p) / 1e2, uint128(block.timestamp));
-        _diaOracle.setValue("WBTC/USD", 63000 * p, uint128(block.timestamp));
-        _diaOracle.setValue("WETH/USD", 2000 * p, uint128(block.timestamp));
-        _diaOracle.setValue("USDC/USD", 1 * p, uint128(block.timestamp));
+        _diaOracle.setValue("XFI/USD", (75 * p) / 1e2);
+        _diaOracle.setValue("WBTC/USD", 63000 * p);
+        _diaOracle.setValue("WETH/USD", 2000 * p);
+        _diaOracle.setValue("USDC/USD", 1 * p);
 
-        _diaOracle.setValue("XAU/USD", 2000 * p, uint128(block.timestamp));
-        _diaOracle.setValue("XLS/USD", 1000 * p, uint128(block.timestamp));
+        _diaOracle.setValue("XAU/USD", 2000 * p);
+        _diaOracle.setValue("XLS/USD", 1000 * p);
     }
 
     function _setUpOracleAdapter(DiaOracleAdapter _oracleAdapter) internal {
@@ -173,7 +174,7 @@ contract Setup is TestUtils, Deploy {
         internal
         returns (Synth)
     {
-        return _createSynth(_implementation, address(this), address(provider), _name, _symbol);
+        return _createSynth(_implementation, address(provider), _name, _symbol);
     }
 
     function _parseRay(uint256 value) internal pure returns (uint256) {
