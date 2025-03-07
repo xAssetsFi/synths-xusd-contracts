@@ -139,7 +139,8 @@ interface IExchanger is IPlatform {
         address synthOut,
         uint256 amountOut,
         uint256 minAmountOut,
-        address receiver
+        address receiver,
+        uint256 fee
     );
     event SwapFailed(
         uint256 nonce,

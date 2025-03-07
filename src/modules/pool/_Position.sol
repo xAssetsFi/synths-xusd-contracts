@@ -90,7 +90,7 @@ abstract contract Position is Calculations {
 
         _positions[msg.sender].lastBorrowTimestamp = block.timestamp;
 
-        emit Borrow(msg.sender, xusdAmount, to);
+        emit Borrow(msg.sender, xusdAmount, to, fee);
     }
 
     function _liquidate(
@@ -130,7 +130,7 @@ abstract contract Position is Calculations {
             position.collaterals.remove(collateralToken);
         }
 
-        emit Liquidate(positionOwner, collateralToken, shares, to);
+        emit Liquidate(positionOwner, collateralToken, shares, to, base, bonus, penalty);
     }
 
     /* ======== UTILS ======== */

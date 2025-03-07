@@ -261,10 +261,16 @@ interface IPool {
         address to,
         bool isPositionClosed
     );
-    event Borrow(address indexed positionOwner, uint256 amount, address to);
+    event Borrow(address indexed positionOwner, uint256 amount, address to, uint256 fee);
     event Repay(address indexed positionOwner, uint256 amount, uint256 remainingDebt);
     event Liquidate(
-        address indexed positionOwner, address indexed token, uint256 amount, address to
+        address indexed positionOwner,
+        address indexed token,
+        uint256 amount,
+        address to,
+        uint256 base,
+        uint256 bonus,
+        uint256 penalty
     );
 
     event CollateralTokenAdded(address token);
