@@ -19,8 +19,6 @@ import {DiaOracleMock} from "test/mock/DiaOracleMock.sol";
 import {CalculationsInitParams} from "src/modules/pool/_Calculations.sol";
 
 abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
-    uint256 privateKey = vm.envUint("PRIVATE_KEY");
-
     address private addressToWrite;
 
     function _deployProvider() internal BroadcastAndWrite("provider") returns (Provider provider) {
@@ -180,7 +178,7 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
     }
 
     modifier BroadcastAndWrite(string memory _name) {
-        vm.startBroadcast(privateKey);
+        vm.startBroadcast();
         _;
         vm.stopBroadcast();
 
