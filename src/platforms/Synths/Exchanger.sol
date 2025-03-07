@@ -190,7 +190,13 @@ contract Exchanger is IExchanger, ProviderKeeperUpgradeable {
             if (amountOut >= data.minAmountOut) {
                 _swap(data.synthIn, data.synthOut, amountIn, amountOut, address(this), user);
                 emit SwapFinished(
-                    data.nonce, data.synthIn, data.synthOut, amountOut, data.minAmountOut, user
+                    data.nonce,
+                    data.synthIn,
+                    data.synthOut,
+                    amountOut,
+                    data.minAmountOut,
+                    user,
+                    data.amountIn - amountIn
                 );
             } else {
                 ISynth(data.synthIn).safeTransfer(user, data.amountIn);
