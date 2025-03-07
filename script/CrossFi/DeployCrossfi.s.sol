@@ -8,16 +8,6 @@ contract DeployCrossfi is DeployApp {
     constructor() DeployApp(getSettings()) {}
 
     function getSettings() internal pure returns (Settings memory) {
-        PoolSettings memory _poolSettings = PoolSettings({
-            collateralRatio: 37500, // 375%
-            liquidationRatio: 15000, // 150%
-            liquidationPenaltyPercentagePoint: 1500, // 15%
-            liquidationBonusPercentagePoint: 500, // 5%
-            loanFee: 150, // 1.5%
-            stabilityFee: 100, // 1%
-            cooldownPeriod: 12 hours
-        });
-
         ExchangerSettings memory _exchangerSettings = ExchangerSettings({
             swapFee: 100, // 1%
             rewarderFee: 0,
@@ -52,7 +42,6 @@ contract DeployCrossfi is DeployApp {
             owner: 0x12e048D4f26F54C0625ef34faBd365E4f925f2fF,
             wxfi: _wxfi,
             diaOracle: 0x859e221ada7CEBDF5D4040bf6a2B8959C05a4233,
-            poolSettings: _poolSettings,
             exchangerSettings: _exchangerSettings,
             assets: _assets,
             collaterals: _collaterals
