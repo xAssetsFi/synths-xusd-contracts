@@ -2,6 +2,7 @@
   "scripts": {
     "prettier": "npx prettier . !docs/**/* !out/**/* !lib/**/* !deployments/**/* !broadcast/**/* --write",
     "prepare": "husky",
+    "coverage": "forge coverage --nmco \"test/*|utils/*|script/*\"",
     "lint": "solhint -c src/.solhint.json src/**/*.sol & solhint -c test/.solhint.json test/**/*.sol",
     "lint:fix": "solhint -c src/.solhint.json --fix --noPrompt src/**/*.sol && solhint -c test/.solhint.json --fix --noPrompt test/**/*.sol",
     "lint:src": "solhint -c src/.solhint.json src/**/*.sol",
