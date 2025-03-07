@@ -10,57 +10,7 @@ import {IDebtShares} from "src/interface/IDebtShares.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
-struct CalculationsInitParams {
-    uint32 collateralRatio;
-    uint32 liquidationRatio;
-    uint32 liquidationPenaltyPercentagePoint;
-    uint32 liquidationBonusPercentagePoint;
-    uint32 loanFee;
-    uint32 stabilityFee;
-    uint32 cooldownPeriod;
-}
-
 abstract contract Calculations is State {
-    function __Calculations_init(
-        address _feeReceiver,
-        address _debtShares,
-        CalculationsInitParams memory params
-    )
-        internal
-        onlyInitializing
-        noZeroAddress(_feeReceiver)
-        noZeroAddress(_debtShares)
-        validInterface(_debtShares, type(IDebtShares).interfaceId)
-        validateLiquidationDeductions
-        lessThanPrecision(params.loanFee)
-        lessThanPrecision(params.stabilityFee)
-        greaterThanPrecision(params.collateralRatio)
-        greaterThanPrecision(params.liquidationRatio)
-    {
-        ratioAdjustments["collateral"] = RatioAdjustment({
-            targetRatio: params.collateralRatio,
-            startRatio: 0,
-            startTime: 0,
-            duration: 0
-        });
-
-        ratioAdjustments["liquidation"] = RatioAdjustment({
-            targetRatio: params.liquidationRatio,
-            startRatio: 0,
-            startTime: 0,
-            duration: 0
-        });
-
-        stabilityFee = params.stabilityFee;
-        loanFee = params.loanFee;
-        cooldownPeriod = params.cooldownPeriod;
-        liquidationPenaltyPercentagePoint = params.liquidationPenaltyPercentagePoint;
-        liquidationBonusPercentagePoint = params.liquidationBonusPercentagePoint;
-
-        feeReceiver = _feeReceiver;
-        debtShares = IDebtShares(_debtShares);
-    }
-
     function calculateHealthFactor(CollateralData[] memory collateralData, uint256 shares)
         public
         view

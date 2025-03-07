@@ -101,7 +101,7 @@ contract PoolSupplyTest is PoolSetup {
         vm.assume(collateral > fuzzingDust);
         vm.assume(collateral <= address(this).balance);
 
-        uint256 borrowAmount = collateral / 4;
+        uint256 borrowAmount = collateral / 6;
 
         address to = makeAddr("to");
 
@@ -120,7 +120,7 @@ contract PoolSupplyTest is PoolSetup {
         assertEq(position.collaterals[0].amount, collateral);
         assertEq(position.collaterals[0].token, address(wxfi));
 
-        uint256 loanFee = 100;
+        uint256 loanFee = 150;
         assertEq(
             xusdAmountAfter - xusdAmountBefore, borrowAmount - (borrowAmount * loanFee) / PRECISION
         );

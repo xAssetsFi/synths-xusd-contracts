@@ -282,6 +282,7 @@ interface IPool {
     event LoanFeeSet(uint256 indexed fee);
     event StabilityFeeSet(uint256 indexed fee);
     event CooldownPeriodSet(uint256 indexed period);
+    event FeeReceiverChanged(address indexed receiver);
 
     /* ======== Errors ======== */
 

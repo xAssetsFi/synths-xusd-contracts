@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import {IPool} from "src/interface/IPool.sol";
+import {IDebtShares} from "src/interface/IDebtShares.sol";
 import {WETHGateway} from "./modules/pool/_WETHGateway.sol";
-import {CalculationsInitParams} from "./modules/pool/_Calculations.sol";
 
 import {ArrayLib, INDEX_NOT_FOUND} from "src/lib/ArrayLib.sol";
 
@@ -15,14 +15,24 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 contract Pool is WETHGateway {
     using ArrayLib for address[];
 
-    function initialize(
-        address _provider,
-        address _weth,
-        address _debtShares,
-        CalculationsInitParams memory params
-    ) public initializer {
-        __Calculations_init(Ownable(_provider).owner(), _debtShares, params);
+    function initialize(address _provider, address _weth, address _debtShares)
+        public
+        initializer
+        noZeroAddress(_debtShares)
+    {
         __ProviderKeeper_init(_provider);
+
+        setFeeReceiver(Ownable(_provider).owner());
+        setCollateralRatio(37500, 0); // 375%
+        setLiquidationRatio(15000, 0); // 150%
+        setLiquidationPenaltyPercentagePoint(1500); // 15%
+        setLiquidationBonusPercentagePoint(500); // 5%
+        setLoanFee(150); // 1.5%
+        setStabilityFee(100); // 1%
+        setCooldownPeriod(12 hours);
+
+        debtShares = IDebtShares(_debtShares);
+
         __WETHGateway_init(_weth);
 
         _registerInterface(type(IPool).interfaceId);
@@ -139,7 +149,7 @@ contract Pool is WETHGateway {
         emit CollateralTokenRemoved(token);
     }
 
-    function setCollateralRatio(uint32 ratio, uint64 duration) external onlyOwner {
+    function setCollateralRatio(uint32 ratio, uint64 duration) public onlyOwner {
         ratioAdjustments["collateral"] = RatioAdjustment({
             targetRatio: ratio,
             startRatio: getCurrentCollateralRatio(),
@@ -150,7 +160,7 @@ contract Pool is WETHGateway {
     }
 
     function setLiquidationRatio(uint32 ratio, uint64 duration)
-        external
+        public
         onlyOwner
         greaterThanPrecision(ratio)
     {
@@ -164,7 +174,7 @@ contract Pool is WETHGateway {
     }
 
     function setLiquidationPenaltyPercentagePoint(uint32 percentagePoint)
-        external
+        public
         validateLiquidationDeductions
         onlyOwner
     {
@@ -173,7 +183,7 @@ contract Pool is WETHGateway {
     }
 
     function setLiquidationBonusPercentagePoint(uint32 percentagePoint)
-        external
+        public
         validateLiquidationDeductions
         onlyOwner
     {
@@ -181,19 +191,24 @@ contract Pool is WETHGateway {
         emit LiquidationBonusPercentagePointSet(percentagePoint);
     }
 
-    function setLoanFee(uint32 fee) external onlyOwner lessThanPrecision(fee) {
+    function setLoanFee(uint32 fee) public onlyOwner lessThanPrecision(fee) {
         loanFee = fee;
         emit LoanFeeSet(fee);
     }
 
-    function setStabilityFee(uint32 fee) external onlyOwner lessThanPrecision(fee) {
+    function setStabilityFee(uint32 fee) public onlyOwner lessThanPrecision(fee) {
         stabilityFee = fee;
         emit StabilityFeeSet(fee);
     }
 
-    function setCooldownPeriod(uint32 period) external onlyOwner {
+    function setCooldownPeriod(uint32 period) public onlyOwner {
         cooldownPeriod = period;
         emit CooldownPeriodSet(period);
+    }
+
+    function setFeeReceiver(address _feeReceiver) public onlyOwner noZeroAddress(_feeReceiver) {
+        feeReceiver = _feeReceiver;
+        emit FeeReceiverChanged(_feeReceiver);
     }
 
     /* ======== MODIFIERS ======== */
