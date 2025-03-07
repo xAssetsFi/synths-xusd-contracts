@@ -16,7 +16,6 @@ import {PoolDataProvider} from "src/misc/PoolDataProvider.sol";
 import {SynthDataProvider} from "src/misc/SynthDataProvider.sol";
 import {DebtShares} from "src/DebtShares.sol";
 import {DiaOracleMock} from "test/mock/DiaOracleMock.sol";
-import {CalculationsInitParams} from "src/modules/pool/_Calculations.sol";
 
 contract DeployComponents is Script, Deploy, Settings {
     uint256 privateKey = vm.envUint("PRIVATE_KEY");
@@ -105,17 +104,7 @@ contract DeployComponents is Script, Deploy, Settings {
         BroadcastAndWrite("pool")
         returns (Pool pool)
     {
-        CalculationsInitParams memory params = CalculationsInitParams({
-            collateralRatio: 30000,
-            liquidationRatio: 12000,
-            liquidationPenaltyPercentagePoint: 500,
-            liquidationBonusPercentagePoint: 1000,
-            loanFee: 100,
-            stabilityFee: 100,
-            cooldownPeriod: 3 minutes
-        });
-
-        pool = _deployPool(address(provider), wxfi, address(debtShares), params);
+        pool = _deployPool(address(provider), wxfi, address(debtShares));
 
         provider.setPool(address(pool));
 

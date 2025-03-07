@@ -9,8 +9,8 @@ contract DeployCrossfi is DeployApp {
 
     function getSettings() internal pure returns (Settings memory) {
         PoolSettings memory _poolSettings = PoolSettings({
-            collateralRatio: 30000, // 300%
-            liquidationRatio: 12000, // 120%
+            collateralRatio: 37500, // 375%
+            liquidationRatio: 15000, // 150%
             liquidationPenaltyPercentagePoint: 1500, // 15%
             liquidationBonusPercentagePoint: 500, // 5%
             loanFee: 150, // 1.5%
@@ -28,7 +28,6 @@ contract DeployCrossfi is DeployApp {
         Asset[] memory _assets = new Asset[](6);
 
         // XFI/USD
-
         // AMZN/USD
         // NFLX/USD
         // MSFT/USD

@@ -4,9 +4,9 @@ pragma solidity ^0.8.20;
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 interface IDebtShares is IERC20Metadata {
-    event RewardAdded(address indexed token, uint256 amount);
+    event RewardAdded(address indexed token, uint256 indexed amount);
     event RewardPaid(address indexed user, address indexed token, uint256 amount);
-    event NewRewardToken(address token);
+    event NewRewardToken(address indexed token);
 
     /// @notice Mint debt shares
     /// @param to The address to mint the debt shares to

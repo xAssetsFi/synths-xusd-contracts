@@ -7,7 +7,7 @@ import {IPool} from "src/interface/IPool.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract PoolLiquidateTest is PoolSetup {
-    uint256 amountSupplied = 300 * 1e6;
+    uint256 amountSupplied = 375 * 1e6;
     uint256 amountBorrowed = 100 ether;
     uint256 receiverShares = 100 ether;
 
