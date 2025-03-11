@@ -14,6 +14,8 @@ import {Synth} from "src/platforms/synths/Synth.sol";
 import {PoolDataProvider} from "src/misc/PoolDataProvider.sol";
 import {SynthDataProvider} from "src/misc/SynthDataProvider.sol";
 
+import {CalculationsInitParams} from "src/modules/pool/_Calculations.sol";
+
 import {Deploy} from "../script/Deploy/Deploy.sol";
 
 import {WETH} from "./mock/WETH.sol";
@@ -53,17 +55,17 @@ contract Setup is TestUtils, Deploy {
         exchanger = _deployExchanger(address(provider), 50, 50, 100, 3 minutes);
         debtShares = _deployDebtShares(address(provider), "xAssets debt shares", "xDS");
 
-        // CalculationsInitParams memory params = CalculationsInitParams({
-        //     collateralRatio: 30000, // 300%
-        //     liquidationRatio: 12000, // 120%
-        //     liquidationPenaltyPercentagePoint: 500, // 5%
-        //     liquidationBonusPercentagePoint: 500, // 5%
-        //     loanFee: 100, // 1%
-        //     stabilityFee: 100, // 1%
-        //     cooldownPeriod: 3 minutes
-        // });
+        CalculationsInitParams memory params = CalculationsInitParams({
+            collateralRatio: 30000, // 300%
+            liquidationRatio: 12000, // 120%
+            liquidationPenaltyPercentagePoint: 500, // 5%
+            liquidationBonusPercentagePoint: 500, // 5%
+            loanFee: 100, // 1%
+            stabilityFee: 100, // 1%
+            cooldownPeriod: 3 minutes
+        });
 
-        pool = _deployPool(address(provider), address(wxfi), address(debtShares));
+        pool = _deployPool(address(provider), address(wxfi), address(debtShares), params);
         oracleAdapter = _deployDiaOracleAdapter(address(provider), address(diaOracle));
         poolDataProvider = _deployPoolDataProvider(address(provider));
         synthDataProvider = _deploySynthDataProvider(address(provider));

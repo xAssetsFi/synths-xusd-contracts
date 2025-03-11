@@ -66,8 +66,8 @@ contract PoolBorrowTest is PoolSetup {
 
         pool.borrow(100 ether, type(uint256).max, user);
 
-        assertEq(IERC20(xusd).balanceOf(user), 98.5 ether);
-        assertEq(IERC20(xusd).balanceOf(address(this)), 1.5 ether);
+        assertEq(IERC20(xusd).balanceOf(user), 99 ether);
+        assertEq(IERC20(xusd).balanceOf(address(this)), 1 ether);
         assertEq(debtShares.balanceOf(user), 100 ether);
     }
 

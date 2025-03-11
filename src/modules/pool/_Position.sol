@@ -160,10 +160,9 @@ abstract contract Position is Calculations {
 
         uint256 stabilityFeeShares = calculateStabilityFee(positionOwner);
 
-        //TODO: implement PNO-02M, ps: moving into scope below will result in a error
-        position.lastChargedFeeTimestamp = block.timestamp;
-
         if (stabilityFeeShares > 0) {
+            position.lastChargedFeeTimestamp = block.timestamp;
+
             debtShares.mint(positionOwner, stabilityFeeShares);
 
             provider().xusd().mint(feeReceiver, convertToAssets(stabilityFeeShares));

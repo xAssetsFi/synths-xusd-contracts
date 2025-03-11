@@ -37,7 +37,7 @@ contract PoolDataProviderTest is PoolDataProviderSetup {
         assertEq(amountSuppliedUSDC, 300 * 1e6, "amountSuppliedUSDC != 300");
 
         uint256 maxBorrow = poolDataProvider.maxXUSDBorrow(address(this));
-        assertEq(maxBorrow, 80 * 10 ** xusd.decimals());
+        assertEq(maxBorrow, 100 * 10 ** xusd.decimals());
     }
 
     function test_maxBorrow_ZeroAmount() public {

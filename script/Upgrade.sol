@@ -7,7 +7,6 @@ import {Pool} from "../src/Pool.sol";
 import {Exchanger} from "../src/platforms/synths/Exchanger.sol";
 import {PoolDataProvider} from "../src/misc/PoolDataProvider.sol";
 import {SynthDataProvider} from "../src/misc/SynthDataProvider.sol";
-import {DiaOracleAdapter} from "../src/DiaOracleAdapter.sol";
 
 import {Fork} from "../utils/Fork.sol";
 import {FileUtils} from "../utils/FileHelpers.sol";
@@ -21,7 +20,9 @@ contract Upgrade is Script, Fork {
 
         fork(chainId);
 
-        upgradePool();
+        // vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
+
+        upgradePoolDataProvider();
 
         vm.stopBroadcast();
     }
@@ -44,10 +45,7 @@ contract Upgrade is Script, Fork {
     }
 
     function upgradePool() public {
-        address pool = fileUtils.readContractAddress(chainId, "pool");
-
-        vm.startBroadcast();
-
+        address pool = 0x0e1BBf79BFC00bdFd41E64c10824De149D717Ccc;
         address newPoolImpl = address(new Pool());
 
         Pool(payable(pool)).upgradeToAndCall(newPoolImpl, "");
@@ -56,20 +54,10 @@ contract Upgrade is Script, Fork {
     function upgradePoolDataProvider() public {
         address poolDataProvider = fileUtils.readContractAddress(chainId, "poolDataProvider");
 
-        vm.startBroadcast();
+        vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
 
         address newPoolDataProviderImpl = address(new PoolDataProvider());
 
         PoolDataProvider(poolDataProvider).upgradeToAndCall(newPoolDataProviderImpl, "");
-    }
-
-    function upgradeDiaOracleAdapter() public {
-        address diaOracleAdapter = fileUtils.readContractAddress(chainId, "oracleAdapter");
-
-        vm.startBroadcast();
-
-        address newDiaOracleAdapterImpl = address(new DiaOracleAdapter());
-
-        DiaOracleAdapter(diaOracleAdapter).upgradeToAndCall(newDiaOracleAdapterImpl, "");
     }
 }

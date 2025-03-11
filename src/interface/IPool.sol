@@ -273,16 +273,15 @@ interface IPool {
         uint256 penalty
     );
 
-    event CollateralTokenAdded(address indexed token);
-    event CollateralTokenRemoved(address indexed token);
-    event CollateralRatioAdjustmentStarted(uint256 indexed ratio, uint256 indexed duration);
-    event LiquidationRatioAdjustmentStarted(uint256 indexed ratio, uint256 indexed duration);
-    event LiquidationPenaltyPercentagePointSet(uint256 indexed percentagePoint);
-    event LiquidationBonusPercentagePointSet(uint256 indexed percentagePoint);
-    event LoanFeeSet(uint256 indexed fee);
-    event StabilityFeeSet(uint256 indexed fee);
-    event CooldownPeriodSet(uint256 indexed period);
-    event FeeReceiverChanged(address indexed receiver);
+    event CollateralTokenAdded(address token);
+    event CollateralTokenRemoved(address token);
+    event CollateralRatioAdjustmentStarted(uint256 ratio, uint256 duration);
+    event LiquidationRatioAdjustmentStarted(uint256 ratio, uint256 duration);
+    event LiquidationPenaltyPercentagePointSet(uint256 percentagePoint);
+    event LiquidationBonusPercentagePointSet(uint256 percentagePoint);
+    event LoanFeeSet(uint256 fee);
+    event StabilityFeeSet(uint256 fee);
+    event CooldownPeriodSet(uint256 period);
 
     /* ======== Errors ======== */
 

@@ -9,7 +9,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract PoolRepayTest is PoolSetup {
     uint256 amountSuppliedXFI = 1e22;
     uint256 amountSuppliedUSDC = 1e20;
-    uint256 amountBorrowed = 1e17;
+    uint256 amountBorrowed = 1e18;
     uint256 amountSharesReceived;
 
     function _afterSetup() internal override {

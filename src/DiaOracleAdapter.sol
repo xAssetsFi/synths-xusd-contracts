@@ -14,7 +14,7 @@ contract DiaOracleAdapter is IDiaOracleAdapter, ProviderKeeperUpgradeable {
 
     mapping(address token => string key) public keys;
 
-    uint256 public constant PRICE_FRESHNESS = 3 days;
+    uint256 public constant PRICE_FRESHNESS = 12 hours;
 
     function initialize(address _provider, address _diaOracle)
         public

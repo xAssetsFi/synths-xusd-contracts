@@ -3,6 +3,8 @@ pragma solidity ^0.8.20;
 
 import "test/Setup.sol";
 
+import {CalculationsInitParams} from "src/modules/pool/_Calculations.sol";
+
 contract SettersTest is Setup {
     address a = makeAddr("a");
     uint256 u256 = 1;
@@ -20,7 +22,17 @@ contract SettersTest is Setup {
     }
 
     function test_setPool() public {
-        Pool newPool = _deployPool(address(provider), address(wxfi), address(debtShares));
+        CalculationsInitParams memory params = CalculationsInitParams({
+            collateralRatio: 30000,
+            liquidationRatio: 12000,
+            liquidationPenaltyPercentagePoint: 500,
+            liquidationBonusPercentagePoint: 500,
+            loanFee: 100,
+            stabilityFee: 100,
+            cooldownPeriod: 3 minutes
+        });
+
+        Pool newPool = _deployPool(address(provider), address(wxfi), address(debtShares), params);
 
         provider.setPool(address(newPool));
 

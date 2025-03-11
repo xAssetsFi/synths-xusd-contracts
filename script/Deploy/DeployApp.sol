@@ -23,6 +23,7 @@ abstract contract DeployApp is Script, Fork, DeploymentSettings, DeployComponent
     Exchanger exchanger;
     Synth xusd;
     Synth synthImplementation;
+    address _diaOracle;
     DebtShares debtShares;
     Pool pool;
     DiaOracleAdapter oracleAdapter;
@@ -90,7 +91,7 @@ abstract contract DeployApp is Script, Fork, DeploymentSettings, DeployComponent
     // }
 
     function _setupOracleAdapter(DiaOracleAdapter _oracleAdapter) internal {
-        vm.startBroadcast();
+        vm.startBroadcast(privateKey);
         for (uint256 i = 0; i < assets.length; i++) {
             _oracleAdapter.setKey(
                 address(assets[i].tokenAddress), string.concat(assets[i].symbol, "/USD")
@@ -106,7 +107,7 @@ abstract contract DeployApp is Script, Fork, DeploymentSettings, DeployComponent
     }
 
     function _setupCollaterals(Pool _pool) internal {
-        vm.startBroadcast();
+        vm.startBroadcast(privateKey);
         for (uint256 i = 0; i < collaterals.length; i++) {
             _pool.addCollateralToken(address(collaterals[i].tokenAddress));
         }

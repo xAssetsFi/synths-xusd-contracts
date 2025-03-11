@@ -6,6 +6,7 @@ import {IExchanger} from "src/interface/platforms/synths/IExchanger.sol";
 
 import {Pool} from "src/Pool.sol";
 import {DebtShares} from "src/DebtShares.sol";
+import {CalculationsInitParams} from "src/modules/pool/_Calculations.sol";
 
 import {Synth} from "src/platforms/synths/Synth.sol";
 import {Exchanger} from "src/platforms/synths/Exchanger.sol";
@@ -60,16 +61,18 @@ contract Deploy {
         return Synth(newSynth);
     }
 
-    function _deployPool(address _provider, address _weth, address _debtShares)
-        internal
-        returns (Pool)
-    {
+    function _deployPool(
+        address _provider,
+        address _weth,
+        address _debtShares,
+        CalculationsInitParams memory params
+    ) internal returns (Pool) {
         Pool poolImplementation = new Pool();
 
         ERC1967Proxy proxy = new ERC1967Proxy(
             address(poolImplementation),
             abi.encodeWithSelector(
-                poolImplementation.initialize.selector, _provider, _weth, _debtShares
+                poolImplementation.initialize.selector, _provider, _weth, _debtShares, params
             )
         );
 

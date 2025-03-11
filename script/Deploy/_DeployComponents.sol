@@ -16,8 +16,11 @@ import {PoolDataProvider} from "src/misc/PoolDataProvider.sol";
 import {SynthDataProvider} from "src/misc/SynthDataProvider.sol";
 import {DebtShares} from "src/DebtShares.sol";
 import {DiaOracleMock} from "test/mock/DiaOracleMock.sol";
+import {CalculationsInitParams} from "src/modules/pool/_Calculations.sol";
 
 abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
+    uint256 privateKey = vm.envUint("PRIVATE_KEY");
+
     address private addressToWrite;
 
     function _deployProvider() internal BroadcastAndWrite("provider") returns (Provider provider) {
@@ -105,7 +108,17 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
         BroadcastAndWrite("pool")
         returns (Pool pool)
     {
-        pool = _deployPool(address(provider), wxfi, address(debtShares));
+        CalculationsInitParams memory params = CalculationsInitParams({
+            collateralRatio: poolSettings.collateralRatio,
+            liquidationRatio: poolSettings.liquidationRatio,
+            liquidationPenaltyPercentagePoint: poolSettings.liquidationPenaltyPercentagePoint,
+            liquidationBonusPercentagePoint: poolSettings.liquidationBonusPercentagePoint,
+            loanFee: poolSettings.loanFee,
+            stabilityFee: poolSettings.stabilityFee,
+            cooldownPeriod: poolSettings.cooldownPeriod
+        });
+
+        pool = _deployPool(address(provider), wxfi, address(debtShares), params);
 
         provider.setPool(address(pool));
 
@@ -167,7 +180,7 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
     }
 
     modifier BroadcastAndWrite(string memory _name) {
-        vm.startBroadcast();
+        vm.startBroadcast(privateKey);
         _;
         vm.stopBroadcast();
 
