@@ -160,9 +160,9 @@ abstract contract Position is Calculations {
 
         uint256 stabilityFeeShares = calculateStabilityFee(positionOwner);
 
-        if (stabilityFeeShares > 0) {
-            position.lastChargedFeeTimestamp = block.timestamp;
+        position.lastChargedFeeTimestamp = block.timestamp;
 
+        if (stabilityFeeShares > 0) {
             debtShares.mint(positionOwner, stabilityFeeShares);
 
             provider().xusd().mint(feeReceiver, convertToAssets(stabilityFeeShares));
