@@ -12,6 +12,7 @@ import {IPool} from "src/interface/IPool.sol";
 import {IExchanger} from "src/interface/platforms/synths/IExchanger.sol";
 import {IOracleAdapter} from "src/interface/IOracleAdapter.sol";
 import {IPlatform} from "src/interface/platforms/IPlatform.sol";
+import {IMarketManager} from "src/interface/platforms/perps/IMarketManager.sol";
 
 contract Provider is IProvider, UUPSImplementation, PausableUpgradeable {
     address internal _xusd;
@@ -20,6 +21,7 @@ contract Provider is IProvider, UUPSImplementation, PausableUpgradeable {
 
     // platforms
     address internal _exchanger;
+    address private _marketManager;
 
     mapping(address => bool) public isPlatform;
 
@@ -75,6 +77,16 @@ contract Provider is IProvider, UUPSImplementation, PausableUpgradeable {
         _oracle = newOracle;
     }
 
+    function setMarketManager(address newMarketManager)
+        external
+        onlyOwner
+        validInterface(newMarketManager, type(IMarketManager).interfaceId)
+    {
+        emit MarketManagerChanged(_marketManager, newMarketManager);
+        _addPlatform(newMarketManager);
+        _marketManager = newMarketManager;
+    }
+
     /* ======== Getters ======== */
 
     function xusd() external view noZeroAddress(_xusd) returns (ISynth) {
@@ -91,6 +103,10 @@ contract Provider is IProvider, UUPSImplementation, PausableUpgradeable {
 
     function oracle() external view noZeroAddress(_oracle) returns (IOracleAdapter) {
         return IOracleAdapter(_oracle);
+    }
+
+    function marketManager() external view noZeroAddress(_marketManager) returns (IMarketManager) {
+        return IMarketManager(_marketManager);
     }
 
     function platforms() external view returns (IPlatform[] memory) {

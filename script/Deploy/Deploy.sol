@@ -6,15 +6,19 @@ import {IExchanger} from "src/interface/platforms/synths/IExchanger.sol";
 
 import {Pool} from "src/Pool.sol";
 import {DebtShares} from "src/DebtShares.sol";
+import {Provider} from "src/Provider.sol";
+import {DiaOracleAdapter} from "src/DiaOracleAdapter.sol";
 import {CalculationsInitParams} from "src/modules/pool/_Calculations.sol";
 
 import {Synth} from "src/platforms/synths/Synth.sol";
 import {Exchanger} from "src/platforms/synths/Exchanger.sol";
-import {SynthDataProvider} from "src/misc/SynthDataProvider.sol";
 
-import {Provider} from "src/Provider.sol";
-import {DiaOracleAdapter} from "src/DiaOracleAdapter.sol";
+import {Market} from "src/platforms/perps/Market.sol";
+import {MarketManager} from "src/platforms/perps/MarketManager.sol";
+
+import {SynthDataProvider} from "src/misc/SynthDataProvider.sol";
 import {PoolDataProvider} from "src/misc/PoolDataProvider.sol";
+import {PerpDataProvider} from "src/misc/PerpDataProvider.sol";
 
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
@@ -155,6 +159,41 @@ contract Deploy {
         );
 
         return SynthDataProvider(address(proxy));
+    }
+
+    function _deployMarketManager(address _provider) internal returns (MarketManager) {
+        MarketManager marketManagerImplementation = new MarketManager();
+
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(marketManagerImplementation),
+            abi.encodeWithSelector(marketManagerImplementation.initialize.selector, _provider)
+        );
+
+        return MarketManager(address(proxy));
+    }
+
+    function _deployPerpDataProvider(address _provider) internal returns (PerpDataProvider) {
+        PerpDataProvider perpDataProviderImplementation = new PerpDataProvider();
+
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(perpDataProviderImplementation),
+            abi.encodeWithSelector(perpDataProviderImplementation.initialize.selector, _provider)
+        );
+
+        return PerpDataProvider(address(proxy));
+    }
+
+    function _createMarket(
+        address _implementation,
+        address _provider,
+        bytes32 _marketKey,
+        bytes32 _baseAsset
+    ) internal returns (Market) {
+        address market = Provider(_provider).marketManager().createMarket(
+            _implementation, _marketKey, _baseAsset
+        );
+
+        return Market(market);
     }
 
     function _deployERC1967Proxy(address _implementation, bytes memory _data)

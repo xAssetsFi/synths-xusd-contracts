@@ -13,8 +13,12 @@ import {Synth} from "src/platforms/synths/Synth.sol";
 
 import {PoolDataProvider} from "src/misc/PoolDataProvider.sol";
 import {SynthDataProvider} from "src/misc/SynthDataProvider.sol";
+import {PerpDataProvider} from "src/misc/PerpDataProvider.sol";
 
 import {CalculationsInitParams} from "src/modules/pool/_Calculations.sol";
+
+import {Market} from "src/platforms/perps/Market.sol";
+import {MarketManager} from "src/platforms/perps/MarketManager.sol";
 
 import {Deploy} from "../script/Deploy/Deploy.sol";
 
@@ -32,6 +36,9 @@ contract Setup is TestUtils, Deploy {
     Exchanger public exchanger;
     SynthDataProvider public synthDataProvider;
 
+    MarketManager public marketManager;
+    Market public marketGold;
+    PerpDataProvider public perpDataProvider;
     Synth public xusd;
     Synth public gold;
     Synth public tesla;
@@ -42,6 +49,7 @@ contract Setup is TestUtils, Deploy {
 
     DiaOracleMock public diaOracle;
     Synth private _synthImplementation;
+    Market public _marketImplementation;
 
     address user;
 
@@ -50,10 +58,6 @@ contract Setup is TestUtils, Deploy {
         _updateOraclePrice();
 
         wxfi = new WETH();
-
-        provider = _deployProvider(address(this));
-        exchanger = _deployExchanger(address(provider), 50, 50, 100, 3 minutes);
-        debtShares = _deployDebtShares(address(provider), "xAssets debt shares", "xDS");
 
         CalculationsInitParams memory params = CalculationsInitParams({
             collateralRatio: 30000, // 300%
@@ -65,14 +69,21 @@ contract Setup is TestUtils, Deploy {
             cooldownPeriod: 3 minutes
         });
 
+        provider = _deployProvider(address(this));
+        exchanger = _deployExchanger(address(provider), 50, 50, 100, 3 minutes);
+        debtShares = _deployDebtShares(address(provider), "xAssets debt shares", "xDS");
         pool = _deployPool(address(provider), address(wxfi), address(debtShares), params);
         oracleAdapter = _deployDiaOracleAdapter(address(provider), address(diaOracle));
+        marketManager = _deployMarketManager(address(provider));
+
         poolDataProvider = _deployPoolDataProvider(address(provider));
         synthDataProvider = _deploySynthDataProvider(address(provider));
+        perpDataProvider = _deployPerpDataProvider(address(provider));
 
         provider.setExchanger(address(exchanger));
         provider.setPool(address(pool));
         provider.setOracle(address(oracleAdapter));
+        provider.setMarketManager(address(marketManager));
 
         xusd = _deployXUSD(address(provider), "XUSD", "XUSD");
 
@@ -80,11 +91,15 @@ contract Setup is TestUtils, Deploy {
 
         _synthImplementation = new Synth();
 
-        gold = __createSynth(address(_synthImplementation), "Gold", "XAU");
-        tesla = __createSynth(address(_synthImplementation), "Tesla", "XLS");
+        gold = _createSynth(address(_synthImplementation), address(provider), "Gold", "XAU");
+        tesla = _createSynth(address(_synthImplementation), address(provider), "Tesla", "XLS");
 
         _setupTokens();
         _setUpOracleAdapter(oracleAdapter);
+
+        _marketImplementation = new Market();
+
+        marketGold = _createMarket(address(_marketImplementation), address(provider), "sXAU", "XAU");
 
         pool.addCollateralToken(address(wbtc));
         pool.addCollateralToken(address(wxfi));
@@ -121,6 +136,8 @@ contract Setup is TestUtils, Deploy {
         _oracleAdapter.setKey(address(usdc), "USDC/USD");
         _oracleAdapter.setKey(address(wxfi), "XFI/USD");
         _oracleAdapter.setKey(address(wbtc), "WBTC/USD");
+
+        _oracleAdapter.setKey(address(uint160(uint256(bytes32("XAU")))), "XAU/USD");
     }
 
     function _setupToken(string memory name, string memory symbol, uint256 amount)
@@ -147,7 +164,7 @@ contract Setup is TestUtils, Deploy {
     }
 
     function _setupTokens() internal {
-        uint256 amount = 1e22;
+        uint256 amount = 1e28;
         wbtc = _setupToken("Wrapped BTC", "WBTC", amount);
         usdc = _setupUSDC(amount);
         _setupWETH(amount);
@@ -168,13 +185,6 @@ contract Setup is TestUtils, Deploy {
         vm.label(address(poolDataProvider), "UI Data Provider");
 
         vm.label(address(this), "THIS");
-    }
-
-    function __createSynth(address _implementation, string memory _name, string memory _symbol)
-        internal
-        returns (Synth)
-    {
-        return _createSynth(_implementation, address(provider), _name, _symbol);
     }
 
     function _parseRay(uint256 value) internal pure returns (uint256) {

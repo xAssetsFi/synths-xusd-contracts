@@ -6,6 +6,7 @@ import {IExchanger} from "./platforms/synths/IExchanger.sol";
 import {IPool} from "./IPool.sol";
 import {IOracleAdapter} from "./IOracleAdapter.sol";
 import {IPlatform} from "./platforms/IPlatform.sol";
+import {IMarketManager} from "./platforms/perps/IMarketManager.sol";
 
 /// @notice The provider is the main contract that allows all contracts to interact with each other by providing the addresses of the other contracts
 interface IProvider {
@@ -19,6 +20,8 @@ interface IProvider {
 
     function xusd() external view returns (ISynth xusd);
 
+    function marketManager() external view returns (IMarketManager marketManager);
+
     /* ======== Admin Functions ======== */
 
     function setXUSD(address xusd) external;
@@ -28,6 +31,8 @@ interface IProvider {
     function setPool(address pool) external;
 
     function setOracle(address oracle) external;
+
+    function setMarketManager(address marketManager) external;
 
     /* ======== View Functions ======== */
 
@@ -52,7 +57,7 @@ interface IProvider {
     event ExchangerChanged(address previous, address current);
     event OracleChanged(address previous, address current);
     event PoolChanged(address previous, address current);
-    event WethGatewayChanged(address previous, address current);
+    event MarketManagerChanged(address previous, address current);
     event NewPlatform(address platform);
     event PlatformRemoved(address platform);
 
