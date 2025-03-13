@@ -34,6 +34,10 @@ interface IProvider {
 
     function setMarketManager(address marketManager) external;
 
+    function pause() external;
+
+    function unpause() external;
+
     /* ======== View Functions ======== */
 
     /// @notice Get the list of platforms

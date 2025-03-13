@@ -21,7 +21,7 @@ contract Provider is IProvider, UUPSImplementation, PausableUpgradeable {
 
     // platforms
     address internal _exchanger;
-    address private _marketManager;
+    address internal _marketManager;
 
     mapping(address => bool) public isPlatform;
 

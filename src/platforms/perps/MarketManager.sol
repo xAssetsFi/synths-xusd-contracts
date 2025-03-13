@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {IPlatform} from "src/interface/platforms/IPlatform.sol";
 import {IMarket} from "src/interface/platforms/perps/IMarket.sol";
 import {IMarketManager} from "src/interface/platforms/perps/IMarketManager.sol";
-
+import {IProvider} from "src/interface/IProvider.sol";
 import {ProviderKeeperUpgradeable} from "src/common/_ProviderKeeperUpgradeable.sol";
 
 import {ArrayLib} from "src/lib/ArrayLib.sol";
@@ -46,7 +46,8 @@ contract MarketManager is ProviderKeeperUpgradeable, IMarketManager, IPlatform {
     }
 
     function removeMarket(bytes32 marketKey) external onlyOwner {
-        _markets.remove(markets[marketKey]); // TODO: check if remove succeeds
+        bool removed = _markets.remove(markets[marketKey]);
+        if (!removed) revert MarketNotFound();
         delete markets[marketKey];
     }
 
@@ -59,9 +60,11 @@ contract MarketManager is ProviderKeeperUpgradeable, IMarketManager, IPlatform {
     }
 
     function addRewardOnDebtShares(uint256 amount) external onlyMarket {
-        provider().xusd().mint(address(this), amount);
-        provider().xusd().approve(address(provider().pool().debtShares()), amount);
-        provider().pool().debtShares().addReward(address(provider().xusd()), amount);
+        IProvider _provider = provider();
+
+        _provider.xusd().mint(address(this), amount);
+        _provider.xusd().approve(address(_provider.pool().debtShares()), amount);
+        _provider.pool().debtShares().addReward(address(_provider.xusd()), amount);
     }
 
     function totalFunds() external view returns (uint256 tf) {

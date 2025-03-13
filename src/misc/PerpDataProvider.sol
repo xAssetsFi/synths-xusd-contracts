@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Market} from "src/platforms/perps/Market.sol";
-import {IPerpDataProvider} from "../interface/platforms/perps/IPerpDataProvider.sol";
+import {IPerpDataProvider} from "src/interface/misc/IPerpDataProvider.sol";
 
 import {ProviderKeeperUpgradeable} from "src/common/_ProviderKeeperUpgradeable.sol";
 

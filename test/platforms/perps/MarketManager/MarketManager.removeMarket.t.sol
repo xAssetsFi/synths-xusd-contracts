@@ -6,17 +6,15 @@ import "./_MarketManager.Setup.t.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract RemoveMarket is MarketManagerSetup {
-    // address market;
+    address market;
 
-    // function _afterSetup() internal override {
-    //     super._afterSetup();
+    function _afterSetup() internal override {
+        super._afterSetup();
 
-    //     marketKey = "sXAU1";
+        marketKey = "sXAU1";
 
-    //     market = marketManager.createMarket(
-    //         address(_marketImplementation), address(user), marketKey, "XAU"
-    //     );
-    // }
+        market = marketManager.createMarket(address(_marketImplementation), marketKey, "XAU");
+    }
 
     function test_ShouldRevertIfNotOwner() public {
         bytes memory onlyOwnerRevertData =

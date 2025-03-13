@@ -20,5 +20,6 @@ interface IMarketManager {
 
     error NotMarket();
     error MarketAlreadyExists();
+    error MarketNotFound();
     error UndefinedPriceForBaseAsset();
 }
