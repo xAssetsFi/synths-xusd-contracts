@@ -30,6 +30,16 @@ contract Market is PerpPosition {
         _modifyPosition(msg.sender, sizeDelta, fillPrice(sizeDelta, price));
     }
 
+    function modifyPositionAndTransferMargin(int256 sizeDelta, int256 marginDelta)
+        external
+        noPaused
+    {
+        uint256 price = assetPrice();
+        _recomputeFunding(price);
+        _modifyPosition(msg.sender, sizeDelta, fillPrice(sizeDelta, price));
+        _transferMargin(marginDelta, price);
+    }
+
     /*
      * Alter the amount of margin in a position. A positive input triggers a deposit; a negative one, a
      * withdrawal. The margin will be burnt or issued directly into/out of the caller's sUSD wallet.

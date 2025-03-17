@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import {IMarket} from "src/interface/platforms/perps/IMarket.sol";
 import {ProviderKeeperUpgradeable} from "src/common/_ProviderKeeperUpgradeable.sol";
-import {DiaOracleAdapter} from "src/DiaOracleAdapter.sol";
 
 abstract contract State is ProviderKeeperUpgradeable, IMarket {
     // metadata

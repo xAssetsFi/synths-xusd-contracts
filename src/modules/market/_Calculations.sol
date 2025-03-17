@@ -2,10 +2,8 @@
 pragma solidity ^0.8.20;
 
 import {State} from "./_State.sol";
-import {ISynth} from "src/interface/platforms/synths/ISynth.sol";
 import {IOracleAdapter} from "src/interface/IOracleAdapter.sol";
 import {SignedSafeMath} from "src/lib/SignedSafeMath.sol";
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 abstract contract Calculations is State {
     using SignedSafeMath for int256;
