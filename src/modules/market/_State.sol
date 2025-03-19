@@ -39,7 +39,7 @@ abstract contract State is ProviderKeeperUpgradeable, IMarket {
     uint32 public fundingLastRecomputed; // Last time funding was recomputed
     int128 public fundingRateLastRecomputed; // Last funding rate
     int128[] public fundingSequence; // Sequence of funding rates
-    // int128 public entryDebtCorrection; //! Legacy
+    int128 public entryDebtCorrection; // ...
     uint64 public nextPositionId; // Next id for a position //? Will be collisions on different markets (mb encode market key in position id)
 
     mapping(address user => PerpPosition) internal _positions;

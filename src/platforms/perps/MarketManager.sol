@@ -71,7 +71,7 @@ contract MarketManager is ProviderKeeperUpgradeable, IMarketManager, IPlatform {
         for (uint256 i; i < _markets.length; i++) {
             IMarket market = IMarket(_markets[i]);
 
-            tf += market.marketSize() * market.assetPrice();
+            tf += market.marketDebt(market.assetPrice());
         }
     }
 

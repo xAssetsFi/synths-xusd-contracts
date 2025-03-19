@@ -588,15 +588,14 @@ abstract contract Calculations is State {
     /*
      * Alter the debt correction to account for the net result of altering a position.
      */
-    //! Legacy
-    // function _applyDebtCorrection(PerpPosition memory newPosition, PerpPosition memory oldPosition)
-    //     internal
-    // {
-    //     int256 newCorrection = _positionDebtCorrection(newPosition);
-    //     int256 oldCorrection = _positionDebtCorrection(oldPosition);
-    //     entryDebtCorrection =
-    //         int128(int256(entryDebtCorrection).add(newCorrection).sub(oldCorrection));
-    // }
+    function _applyDebtCorrection(PerpPosition memory newPosition, PerpPosition memory oldPosition)
+        internal
+    {
+        int256 newCorrection = _positionDebtCorrection(newPosition);
+        int256 oldCorrection = _positionDebtCorrection(oldPosition);
+        entryDebtCorrection =
+            int128(int256(entryDebtCorrection).add(newCorrection).sub(oldCorrection));
+    }
 
     /*
      * The impact of a given position on the debt correction.
@@ -678,18 +677,12 @@ abstract contract Calculations is State {
 
         // Update the debt correction.
         uint256 fundingIndex = _latestFundingIndex();
-        // _applyDebtCorrection(
-        //     PerpPosition(
-        //         0, uint64(fundingIndex), uint128(margin), uint128(price), int128(position.size)
-        //     ),
-        //     PerpPosition(
-        //         0,
-        //         position.lastFundingIndex,
-        //         position.margin,
-        //         position.lastPrice,
-        //         int128(position.size)
-        //     )
-        // );
+        _applyDebtCorrection(
+            PerpPosition(position.size, uint128(margin), uint128(price), uint64(fundingIndex), 0),
+            PerpPosition(
+                position.size, position.margin, position.lastPrice, position.lastFundingIndex, 0
+            )
+        );
 
         // Update the account's position with the realised margin.
         position.margin = uint128(margin);
@@ -811,7 +804,7 @@ abstract contract Calculations is State {
 
         // Update the margin, and apply the resulting debt correction
         position.margin = newPosition.margin;
-        // _applyDebtCorrection(newPosition, oldPosition);
+        _applyDebtCorrection(newPosition, oldPosition);
 
         // Record the trade
         uint64 id = oldPosition.id;
@@ -844,7 +837,9 @@ abstract contract Calculations is State {
         //     position.size
         // );
 
-        emit PositionModified(sender, params.sizeDelta, params.fillPrice, fee, burnFee, ownerFee);
+        emit PositionModified(
+            sender, params.sizeDelta, params.fillPrice, newPosition.size, fee, burnFee, ownerFee
+        );
 
         // emit the modification event
         // emitPositionModified(
@@ -858,6 +853,19 @@ abstract contract Calculations is State {
         //     fee,
         //     marketState.marketSkew()
         // );
+    }
+
+    function marketDebt(uint256 price) public view returns (uint256) {
+        // short circuit and also convenient during setup
+        if (marketSkew == 0 && entryDebtCorrection == 0) {
+            // if these are 0, the resulting calculation is necessarily zero as well
+            return 0;
+        }
+        // see comment explaining this calculation in _positionDebtCorrection()
+        int256 priceWithFunding = int256(price).add(_nextFundingEntry(price));
+        int256 totalDebt =
+            int256(marketSkew).multiplyDecimal(priceWithFunding).add(entryDebtCorrection);
+        return totalDebt > 0 ? uint256(totalDebt) : 0;
     }
 
     /*

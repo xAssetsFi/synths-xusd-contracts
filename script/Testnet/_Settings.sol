@@ -18,6 +18,7 @@ abstract contract Settings {
 
     Asset[] assets;
     Asset[] collaterals;
+    Asset[] markets;
 
     function _setupCollateralAndAssets() internal {
         assets.push(Asset(address(0), "VIC", "Vincom Retail", 163_000_000));
@@ -30,5 +31,12 @@ abstract contract Settings {
         collaterals.push(Asset(wbtc, "BTC", "Bitcoin", 6_836_700_000_000));
         collaterals.push(Asset(weth, "ETH", "Ethereum", 251_000_000_000));
         collaterals.push(Asset(usdc, "USDC", "USD Coin", 100_000_000));
+
+        markets.push(
+            Asset(address(uint160(uint256(bytes32("xXAU")))), "XAU", "xXAU", 273_600_000_000)
+        );
+        markets.push(
+            Asset(address(uint160(uint256(bytes32("xBTC")))), "BTC", "xBTC", 6_836_700_000_000)
+        );
     }
 }

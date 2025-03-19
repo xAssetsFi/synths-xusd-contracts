@@ -18,6 +18,8 @@ import {PoolDataProvider} from "src/misc/PoolDataProvider.sol";
 import {SynthDataProvider} from "src/misc/SynthDataProvider.sol";
 import {DebtShares} from "src/DebtShares.sol";
 import {DiaOracleMock} from "test/mock/DiaOracleMock.sol";
+import {MarketManager} from "src/platforms/perps/MarketManager.sol";
+import {Market} from "src/platforms/perps/Market.sol";
 
 contract DeployAppTestnet is Script, Fork, Settings, DeployComponents {
     Provider provider;
@@ -30,6 +32,11 @@ contract DeployAppTestnet is Script, Fork, Settings, DeployComponents {
     DiaOracleAdapter oracleAdapter;
     PoolDataProvider poolDataProvider;
     SynthDataProvider synthDataProvider;
+
+    Market marketImpl;
+    MarketManager marketManager;
+    Market marketGold;
+    Market marketBtc;
 
     function setUp() public virtual {
         _setupCollateralAndAssets();
@@ -56,6 +63,11 @@ contract DeployAppTestnet is Script, Fork, Settings, DeployComponents {
 
         _setupOracleAdapter(oracleAdapter);
         _setupCollaterals(pool);
+
+        marketImpl = _deployMarketImpl();
+        marketManager = _deployMarketManager(provider);
+        marketGold = _deployMarket(provider, address(marketImpl), "xXAU", "XAU", "marketGold");
+        marketBtc = _deployMarket(provider, address(marketImpl), "xBTC", "BTC", "marketBtc");
 
         _afterDeploy();
     }
@@ -96,6 +108,13 @@ contract DeployAppTestnet is Script, Fork, Settings, DeployComponents {
                 address(collaterals[i].tokenAddress), string.concat(collaterals[i].symbol, "/USD")
             );
         }
+
+        for (uint256 i = 0; i < markets.length; i++) {
+            _oracleAdapter.setKey(
+                address(markets[i].tokenAddress), string.concat(markets[i].symbol, "/USD")
+            );
+        }
+
         vm.stopBroadcast();
     }
 

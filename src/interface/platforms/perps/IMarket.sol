@@ -50,6 +50,8 @@ interface IMarket {
 
     function marketSize() external view returns (uint256);
 
+    function marketDebt(uint256 price) external view returns (uint256);
+
     function getFundingSequence() external view returns (int128[] memory);
 
     function currentFundingRate() external view returns (int256);
@@ -104,6 +106,7 @@ interface IMarket {
         address indexed user,
         int256 sizeDelta,
         uint256 fillPrice,
+        int256 remainingSize,
         uint256 fee,
         uint256 burnFee,
         uint256 ownerFee

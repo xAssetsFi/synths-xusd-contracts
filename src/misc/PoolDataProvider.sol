@@ -192,7 +192,8 @@ contract PoolDataProvider is IPoolDataProvider, ProviderKeeperUpgradeable {
             address user = users[i];
             IPool.Position memory position = pool.getPosition(user);
 
-            uint256 positionShares = pool.debtShares().balanceOf(user);
+            uint256 positionShares =
+                pool.debtShares().balanceOf(user) + pool.calculateStabilityFee(user);
 
             {
                 if (positionShares == 0) continue;
@@ -261,7 +262,7 @@ contract PoolDataProvider is IPoolDataProvider, ProviderKeeperUpgradeable {
 
         uint256 collateralAmountToLiquidate = collateral.amount - deductions;
 
-        collateralAmountToLiquidate = (collateralAmountToLiquidate / 1000) * 1023; // TODO: refactor this
+        // collateralAmountToLiquidate = (collateralAmountToLiquidate / 1000) * 1023; // TODO: refactor this
 
         uint256 xusdAmount = (collateralAmountToLiquidate * collateralPrice) / oraclePrecision;
 

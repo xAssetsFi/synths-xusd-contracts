@@ -12,6 +12,8 @@ import {Exchanger} from "src/platforms/synths/Exchanger.sol";
 import {DiaOracleAdapter} from "src/DiaOracleAdapter.sol";
 import {Pool} from "src/Pool.sol";
 import {Synth} from "src/platforms/synths/Synth.sol";
+import {MarketManager} from "src/platforms/perps/MarketManager.sol";
+import {Market} from "src/platforms/perps/Market.sol";
 import {PoolDataProvider} from "src/misc/PoolDataProvider.sol";
 import {SynthDataProvider} from "src/misc/SynthDataProvider.sol";
 import {DebtShares} from "src/DebtShares.sol";
@@ -107,9 +109,9 @@ contract DeployComponents is Script, Deploy, Settings {
     {
         CalculationsInitParams memory params = CalculationsInitParams({
             collateralRatio: 30000,
-            liquidationRatio: 12000,
+            liquidationRatio: 15000,
             liquidationPenaltyPercentagePoint: 500,
-            liquidationBonusPercentagePoint: 1000,
+            liquidationBonusPercentagePoint: 500,
             loanFee: 100,
             stabilityFee: 100,
             cooldownPeriod: 3 minutes
@@ -176,6 +178,42 @@ contract DeployComponents is Script, Deploy, Settings {
         addressToWrite = address(xusd);
 
         return xusd;
+    }
+
+    function _deployMarketManager(Provider provider)
+        internal
+        BroadcastAndWrite("marketManager")
+        returns (MarketManager marketManager)
+    {
+        marketManager = _deployMarketManager(address(provider));
+
+        provider.setMarketManager(address(marketManager));
+
+        addressToWrite = address(marketManager);
+
+        return marketManager;
+    }
+
+    function _deployMarketImpl() internal BroadcastAndWrite("marketImpl") returns (Market market) {
+        market = new Market();
+
+        addressToWrite = address(market);
+
+        return market;
+    }
+
+    function _deployMarket(
+        Provider provider,
+        address marketImpl,
+        bytes32 marketKey,
+        bytes32 baseAsset,
+        string memory marketKeyString
+    ) internal BroadcastAndWrite(marketKeyString) returns (Market market) {
+        market = _createMarket(marketImpl, address(provider), marketKey, baseAsset);
+
+        addressToWrite = address(market);
+
+        return market;
     }
 
     modifier BroadcastAndWrite(string memory _name) {
