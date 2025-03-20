@@ -11,6 +11,8 @@ import {ArrayLib} from "src/lib/ArrayLib.sol";
 
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
+import {MarketLib} from "src/lib/MarketLib.sol";
+
 contract MarketManager is ProviderKeeperUpgradeable, IMarketManager, IPlatform {
     using Clones for address;
     using ArrayLib for address[];
@@ -33,7 +35,7 @@ contract MarketManager is ProviderKeeperUpgradeable, IMarketManager, IPlatform {
     {
         if (markets[marketKey] != address(0)) revert MarketAlreadyExists();
 
-        if (provider().oracle().getPrice(address(uint160(uint256(baseAsset)))) == 0) {
+        if (provider().oracle().getPrice(MarketLib.getAddress(baseAsset)) == 0) {
             revert UndefinedPriceForBaseAsset();
         }
 

@@ -39,7 +39,41 @@ contract DeployForLiquidatorTests is DeployAppTestnet {
             address(usdc), 3000 * tokenPrecision, 1000 ether, type(uint256).max, owner
         );
 
-        diaOracle.setValue("USDC/USD", 5e7 - 1);
+        IERC20Metadata(xusd).approve(address(marketGold), type(uint256).max);
+        IERC20Metadata(xusd).approve(address(marketBtc), type(uint256).max);
+
+        marketGold.transferMargin(100e18);
+        marketGold.modifyPosition(1e17);
+        marketBtc.transferMarginAndModifyPosition(100e18, -1e16);
+
+        (uint128 xauPrice,) = diaOracle.getValue("XAU/USD");
+        (uint128 btcPrice,) = diaOracle.getValue("BTC/USD");
+
+        diaOracle.setValue("XAU/USD", xauPrice / 1000 * 663);
+        diaOracle.setValue("BTC/USD", btcPrice / 1000 * 1110);
+
+        vm.stopBroadcast();
+
+        uint256 anvil1Pk = 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d;
+        address anvil1 = vm.addr(anvil1Pk);
+
+        vm.startBroadcast(anvil1Pk);
+
+        USDC(usdc).mint(anvil1, 100000 * tokenPrecision);
+        USDC(usdc).approve(address(pool), type(uint256).max);
+
+        pool.supplyAndBorrow(
+            address(usdc), 30000 * tokenPrecision, 1000 ether, type(uint256).max, owner
+        );
+        vm.stopBroadcast();
+
+        vm.startBroadcast(privateKey);
+
+        diaOracle.setValue("USDC/USD", 4.3e7);
+
+        require(marketBtc.baseAsset() != marketGold.baseAsset(), "Base assets are the same");
+
+        require(marketBtc.assetPrice() != marketGold.assetPrice(), "Prices are the same");
 
         uint256 healthFactor = pool.getHealthFactor(owner);
 
@@ -47,40 +81,13 @@ contract DeployForLiquidatorTests is DeployAppTestnet {
 
         require(healthFactor >= 0.9e18, "Health factor is not met");
 
-        IERC20Metadata(xusd).approve(address(marketGold), type(uint256).max);
-        IERC20Metadata(xusd).approve(address(marketBtc), type(uint256).max);
-
-        marketGold.transferMarginAndModifyPosition(100e18, 10000);
-        marketBtc.transferMarginAndModifyPosition(100e18, -10000);
-
-        vm.stopBroadcast();
-
-        uint256 anvil0Pk = 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d;
-        address anvil0 = vm.addr(anvil0Pk);
-
-        vm.startBroadcast(anvil0Pk);
-
-        USDC(usdc).mint(anvil0, 100000 * tokenPrecision);
-        USDC(usdc).approve(address(pool), type(uint256).max);
-
-        pool.supplyAndBorrow(
-            address(usdc), 30000 * tokenPrecision, 1000 ether, type(uint256).max, anvil0
-        );
-
-        xusd.transfer(owner, xusd.balanceOf(anvil0));
-        vm.stopBroadcast();
-
         address[] memory users = new address[](1);
         users[0] = owner;
 
         (address[] memory tokens, uint256[] memory shares) =
             poolDataProvider.findLiquidationOpportunity(users);
 
-        pool.getPosition(owner);
-
-        vm.startBroadcast(privateKey);
-        pool.liquidate(owner, tokens[0], 0, shares[0], owner);
-
-        pool.getPosition(owner);
+        // vm.startBroadcast(privateKey);
+        // pool.liquidate(owner, tokens[0], 0, shares[0], owner);
     }
 }

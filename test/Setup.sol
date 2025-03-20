@@ -26,6 +26,8 @@ import {WETH} from "./mock/WETH.sol";
 import {DiaOracleMock} from "./mock/DiaOracleMock.sol";
 import {ERC20Token, USDC} from "./mock/ERC20Token.sol";
 
+import {MarketLib} from "src/modules/market/_State.sol";
+
 contract Setup is TestUtils, Deploy {
     Pool public pool;
     DebtShares public debtShares;
@@ -137,7 +139,7 @@ contract Setup is TestUtils, Deploy {
         _oracleAdapter.setKey(address(wxfi), "XFI/USD");
         _oracleAdapter.setKey(address(wbtc), "WBTC/USD");
 
-        _oracleAdapter.setKey(address(uint160(uint256(bytes32("XAU")))), "XAU/USD");
+        _oracleAdapter.setKey(MarketLib.getAddress("XAU"), "XAU/USD");
     }
 
     function _setupToken(string memory name, string memory symbol, uint256 amount)

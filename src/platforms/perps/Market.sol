@@ -37,6 +37,8 @@ contract Market is PerpPosition {
         uint256 price = assetPrice();
         _recomputeFunding(price);
         _modifyPosition(msg.sender, sizeDelta, fillPrice(sizeDelta, price));
+        uint256 margin = _positions[msg.sender].margin;
+        if (marginDelta < 0 && margin < uint256(-marginDelta)) marginDelta = -int256(margin);
         _transferMargin(marginDelta, price);
     }
 

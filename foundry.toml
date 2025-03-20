@@ -38,6 +38,7 @@ metis = "${METIS_RPC}"
 sei = "${SEI_RPC}"
 crossfi-testnet = "${CROSSFI_TESTNET_RPC}"
 crossfi = "${CROSSFI_RPC}"
+anvil = "http://localhost:8545"
 
 [etherscan]
 mainnet = { key = "${ETHEREUM_TOKEN}", chain = "mainnet" }

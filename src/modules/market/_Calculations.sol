@@ -377,6 +377,10 @@ abstract contract Calculations is State {
             <= liquidationMargin(int256(position.size), price);
     }
 
+    function canLiquidate(address account, uint256 price) public view returns (bool) {
+        return canLiquidate(_positions[account], price);
+    }
+
     function currentLeverage(int256 size, uint256 price, uint256 remainingMargin_)
         public
         pure
@@ -532,7 +536,7 @@ abstract contract Calculations is State {
     function assetPrice() public view returns (uint256 price) {
         IOracleAdapter diaOracleAdapter = provider().oracle();
 
-        price = diaOracleAdapter.getPrice(address(uint160(uint256(baseAsset))));
+        price = diaOracleAdapter.getPrice(getAddressInOracleAdapter());
 
         uint256 scaleToWad = 1e18 / diaOracleAdapter.precision();
 

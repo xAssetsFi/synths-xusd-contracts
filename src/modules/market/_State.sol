@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import {IMarket} from "src/interface/platforms/perps/IMarket.sol";
 import {ProviderKeeperUpgradeable} from "src/common/_ProviderKeeperUpgradeable.sol";
+import {MarketLib} from "src/lib/MarketLib.sol";
 
 abstract contract State is ProviderKeeperUpgradeable, IMarket {
     // metadata
@@ -67,12 +68,16 @@ abstract contract State is ProviderKeeperUpgradeable, IMarket {
         maxLiquidationDelta = 0.1e18;
         maxPD = 0.1e18;
 
-        tradeFeeRatio = 0.015e18;
+        tradeFeeRatio = 0.0015e18;
         burnAtTradePartOfTradeFee = 0.2e18;
         ownerPartOfTradeFee = 0.5e18;
         ownerPartOfLiquidationFee = 0.2e18;
 
         fundingSequence.push(0);
+    }
+
+    function getAddressInOracleAdapter() public view returns (address) {
+        return MarketLib.getAddress(baseAsset);
     }
 
     function approveExecutor(address executor) external {

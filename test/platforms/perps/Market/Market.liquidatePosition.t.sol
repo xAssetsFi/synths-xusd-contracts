@@ -13,7 +13,7 @@ contract LiquidatePosition is MarketSetup {
     }
 
     function test_ShouldLiquidatePosition() public {
-        _setGoldPrice(oracleAdapter.getPrice(address(gold)) / 1000 * 777);
+        _setGoldPrice(oracleAdapter.getPrice(address(gold)) / 1000 * 760);
 
         address liquidator = vm.addr(0x666);
         address owner = vm.addr(0x777);

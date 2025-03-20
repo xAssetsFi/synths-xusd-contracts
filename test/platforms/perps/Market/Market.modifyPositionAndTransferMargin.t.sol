@@ -11,11 +11,11 @@ contract ModifyPositionAndTransferMargin is MarketSetup {
 
         marketGold.transferMarginAndModifyPosition(int256(amountBorrowed), targetPositionSize);
 
-        marketGold.modifyPositionAndTransferMargin(-targetPositionSize, -4984749480936875000000);
+        marketGold.modifyPositionAndTransferMargin(-targetPositionSize, -type(int256).max);
 
         assertEq(marketGold.getPerpPosition(address(this)).margin, 0);
         assertEq(marketGold.getPerpPosition(address(this)).size, 0);
 
-        assertEq(xusd.balanceOf(address(this)), 4984749480936875000000);
+        assertEq(xusd.balanceOf(address(this)), 4998249497811875000000);
     }
 }

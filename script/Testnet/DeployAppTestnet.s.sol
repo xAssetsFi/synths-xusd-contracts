@@ -19,6 +19,7 @@ import {SynthDataProvider} from "src/misc/SynthDataProvider.sol";
 import {DebtShares} from "src/DebtShares.sol";
 import {DiaOracleMock} from "test/mock/DiaOracleMock.sol";
 import {MarketManager} from "src/platforms/perps/MarketManager.sol";
+import {MarketLib} from "src/lib/MarketLib.sol";
 import {Market} from "src/platforms/perps/Market.sol";
 
 contract DeployAppTestnet is Script, Fork, Settings, DeployComponents {
@@ -109,11 +110,8 @@ contract DeployAppTestnet is Script, Fork, Settings, DeployComponents {
             );
         }
 
-        for (uint256 i = 0; i < markets.length; i++) {
-            _oracleAdapter.setKey(
-                address(markets[i].tokenAddress), string.concat(markets[i].symbol, "/USD")
-            );
-        }
+        oracleAdapter.setKey(MarketLib.getAddress("XAU"), "XAU/USD");
+        oracleAdapter.setKey(MarketLib.getAddress("BTC"), "BTC/USD");
 
         vm.stopBroadcast();
     }

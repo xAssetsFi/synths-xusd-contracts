@@ -70,10 +70,10 @@ abstract contract Calculations is State {
 
         uint256 totalUsdCollateralValue = totalPositionCollateralValue(collateralData);
 
-        uint256 totalDebt = convertToAssets(shares);
+        uint256 debt = convertToAssets(shares);
 
         hf = Math.mulDiv(
-            totalUsdCollateralValue, WAD, (totalDebt * getCurrentLiquidationRatio()) / PRECISION
+            totalUsdCollateralValue, WAD, (debt * getCurrentLiquidationRatio()) / PRECISION
         );
     }
 
