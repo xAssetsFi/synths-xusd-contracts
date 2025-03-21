@@ -42,9 +42,8 @@ contract DeployForLiquidatorTests is DeployAppTestnet {
         IERC20Metadata(xusd).approve(address(marketGold), type(uint256).max);
         IERC20Metadata(xusd).approve(address(marketBtc), type(uint256).max);
 
-        marketGold.transferMargin(100e18);
-        marketGold.modifyPosition(1e17);
-        marketBtc.transferMarginAndModifyPosition(100e18, -1e16);
+        marketGold.transferMarginAndModifyPosition(100e18, 1.05e17);
+        marketBtc.transferMarginAndModifyPosition(100e18, -1.1e16);
 
         (uint128 xauPrice,) = diaOracle.getValue("XAU/USD");
         (uint128 btcPrice,) = diaOracle.getValue("BTC/USD");
@@ -69,7 +68,7 @@ contract DeployForLiquidatorTests is DeployAppTestnet {
 
         vm.startBroadcast(privateKey);
 
-        diaOracle.setValue("USDC/USD", 4.3e7);
+        diaOracle.setValue("USDC/USD", 4e7);
 
         require(marketBtc.baseAsset() != marketGold.baseAsset(), "Base assets are the same");
 
@@ -87,7 +86,12 @@ contract DeployForLiquidatorTests is DeployAppTestnet {
         (address[] memory tokens, uint256[] memory shares) =
             poolDataProvider.findLiquidationOpportunity(users);
 
-        // vm.startBroadcast(privateKey);
-        // pool.liquidate(owner, tokens[0], 0, shares[0], owner);
+        require(shares[0] > 0, "No liquidation opportunity");
+
+        require(
+            marketGold.canLiquidate(owner, marketGold.assetPrice()), "MarketGold cannot liquidate"
+        );
+
+        require(marketBtc.canLiquidate(owner, marketBtc.assetPrice()), "MarketBtc cannot liquidate");
     }
 }
