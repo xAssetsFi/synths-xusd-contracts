@@ -20,23 +20,25 @@ contract Market is PerpPosition {
         _registerInterface(type(IMarket).interfaceId);
     }
 
-    function transferMarginAndModifyPosition(int256 marginDelta, int256 sizeDelta)
-        external
-        noPaused
-    {
+    function transferMarginAndModifyPosition(
+        int256 marginDelta,
+        int256 sizeDelta,
+        uint256 desiredFillPrice
+    ) external noPaused {
         uint256 price = assetPrice();
         _recomputeFunding(price);
         _transferMargin(marginDelta, price);
-        _modifyPosition(msg.sender, sizeDelta, fillPrice(sizeDelta, price));
+        _modifyPosition(msg.sender, sizeDelta, desiredFillPrice);
     }
 
-    function modifyPositionAndTransferMargin(int256 sizeDelta, int256 marginDelta)
-        external
-        noPaused
-    {
+    function modifyPositionAndTransferMargin(
+        int256 sizeDelta,
+        int256 marginDelta,
+        uint256 desiredFillPrice
+    ) external noPaused {
         uint256 price = assetPrice();
         _recomputeFunding(price);
-        _modifyPosition(msg.sender, sizeDelta, fillPrice(sizeDelta, price));
+        _modifyPosition(msg.sender, sizeDelta, desiredFillPrice);
         uint256 margin = _positions[msg.sender].margin;
         if (marginDelta < 0 && margin < uint256(-marginDelta)) marginDelta = -int256(margin);
         _transferMargin(marginDelta, price);

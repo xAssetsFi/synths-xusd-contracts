@@ -9,8 +9,14 @@ contract TransferMarginAndModifyPosition is MarketSetup {
 
         marketGold.transferOwnership(address(0xdead));
 
+        uint256 assetPriceBefore = marketGold.assetPrice();
+
         uint256 addressThisBefore = xusd.balanceOf(address(this));
-        marketGold.transferMarginAndModifyPosition(int256(amountBorrowed), targetPositionSize);
+        marketGold.transferMarginAndModifyPosition(
+            int256(amountBorrowed),
+            targetPositionSize,
+            marketGold.fillPrice(targetPositionSize, assetPriceBefore)
+        );
         uint256 addressThisAfter = xusd.balanceOf(address(this));
 
         assertEq(addressThisAfter, addressThisBefore - amountBorrowed);
