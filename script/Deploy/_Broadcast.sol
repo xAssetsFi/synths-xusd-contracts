@@ -21,6 +21,7 @@ import {Market} from "src/platforms/perps/Market.sol";
 import {MarketManager} from "src/platforms/perps/MarketManager.sol";
 import {WETH} from "test/mock/WETH.sol";
 import {Multicall3} from "test/mock/Multicall3.sol";
+import {PerpDataProvider} from "src/misc/PerpDataProvider.sol";
 
 abstract contract Broadcast is Script, Deploy, DeploymentSettings {
     address private addressToWrite;
@@ -261,6 +262,18 @@ abstract contract Broadcast is Script, Deploy, DeploymentSettings {
         addressToWrite = address(multicall3);
 
         return multicall3;
+    }
+
+    function _broadcastDeployPerpDataProvider(Provider provider)
+        internal
+        BroadcastAndWrite("perpDataProvider")
+        returns (PerpDataProvider perpDataProvider)
+    {
+        perpDataProvider = _deployPerpDataProvider(address(provider));
+
+        addressToWrite = address(perpDataProvider);
+
+        return perpDataProvider;
     }
 
     modifier BroadcastAndWrite(string memory _name) {

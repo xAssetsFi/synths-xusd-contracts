@@ -18,6 +18,7 @@ import {DebtShares} from "src/DebtShares.sol";
 import {DiaOracleMock} from "test/mock/DiaOracleMock.sol";
 import {Market} from "src/platforms/perps/Market.sol";
 import {MarketManager} from "src/platforms/perps/MarketManager.sol";
+import {PerpDataProvider} from "src/misc/PerpDataProvider.sol";
 
 abstract contract DeployApp is Script, Fork, DeploymentSettings, Broadcast {
     /* ======== CORE ======== */
@@ -39,6 +40,7 @@ abstract contract DeployApp is Script, Fork, DeploymentSettings, Broadcast {
 
     Market marketImpl;
     MarketManager marketManager;
+    PerpDataProvider perpDataProvider;
 
     constructor(Settings memory settings) DeploymentSettings(settings) {}
 
@@ -114,6 +116,7 @@ abstract contract DeployApp is Script, Fork, DeploymentSettings, Broadcast {
     function _deployPerps() internal {
         marketImpl = _broadcastDeployMarketImpl();
         marketManager = _broadcastDeployMarketManager(provider);
+        perpDataProvider = _broadcastDeployPerpDataProvider(provider);
 
         _createMarkets();
     }

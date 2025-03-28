@@ -20,7 +20,7 @@ contract DeployStateForFrontend is DeployApp {
         vm.startBroadcast(pk);
 
         WETH(wxfi).approve(address(pool), type(uint256).max);
-        pool.supplyETHAndBorrow{value: 1000e18}(1000e18, type(uint256).max, vm.addr(pk));
+        pool.supplyETHAndBorrow{value: 1000e18}(100000e18, type(uint256).max, vm.addr(pk));
 
         vm.stopBroadcast();
     }
