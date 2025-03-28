@@ -48,7 +48,8 @@ contract SettersTest is Setup {
     }
 
     function test_setXUSD() public {
-        Synth newXUSD = _deployXUSD(address(provider), "xUSD", "xUSD");
+        Synth synthImplementation = new Synth();
+        Synth newXUSD = _deployXUSD(address(synthImplementation), address(provider), "xUSD", "xUSD");
 
         provider.setXUSD(address(newXUSD));
 

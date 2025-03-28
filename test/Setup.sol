@@ -59,7 +59,7 @@ contract Setup is TestUtils, Deploy {
         diaOracle = new DiaOracleMock();
         _updateOraclePrice();
 
-        wxfi = new WETH();
+        wxfi = new WETH("Wrapped Ether", "WETH");
 
         CalculationsInitParams memory params = CalculationsInitParams({
             collateralRatio: 30000, // 300%
@@ -72,6 +72,10 @@ contract Setup is TestUtils, Deploy {
         });
 
         provider = _deployProvider(address(this));
+
+        _synthImplementation = new Synth();
+        xusd = _deployXUSD(address(_synthImplementation), address(provider), "XUSD", "XUSD");
+
         exchanger = _deployExchanger(address(provider), 50, 50, 100, 3 minutes);
         debtShares = _deployDebtShares(address(provider), "xAssets debt shares", "xDS");
         pool = _deployPool(address(provider), address(wxfi), address(debtShares), params);
@@ -87,11 +91,7 @@ contract Setup is TestUtils, Deploy {
         provider.setOracle(address(oracleAdapter));
         provider.setMarketManager(address(marketManager));
 
-        xusd = _deployXUSD(address(provider), "XUSD", "XUSD");
-
         provider.setXUSD(address(xusd));
-
-        _synthImplementation = new Synth();
 
         gold = _createSynth(address(_synthImplementation), address(provider), "Gold", "XAU");
         tesla = _createSynth(address(_synthImplementation), address(provider), "Tesla", "XLS");

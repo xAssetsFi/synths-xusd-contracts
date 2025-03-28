@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {Script, console} from "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
 
 import {DeploymentSettings} from "./_Settings.sol";
 import {Deploy} from "../Deploy/Deploy.sol";
@@ -17,13 +17,19 @@ import {SynthDataProvider} from "src/misc/SynthDataProvider.sol";
 import {DebtShares} from "src/DebtShares.sol";
 import {DiaOracleMock} from "test/mock/DiaOracleMock.sol";
 import {CalculationsInitParams} from "src/modules/pool/_Calculations.sol";
+import {Market} from "src/platforms/perps/Market.sol";
+import {MarketManager} from "src/platforms/perps/MarketManager.sol";
+import {WETH} from "test/mock/WETH.sol";
+import {Multicall3} from "test/mock/Multicall3.sol";
 
-abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
-    uint256 privateKey = vm.envUint("PRIVATE_KEY");
-
+abstract contract Broadcast is Script, Deploy, DeploymentSettings {
     address private addressToWrite;
 
-    function _deployProvider() internal BroadcastAndWrite("provider") returns (Provider provider) {
+    function _broadcastDeployProvider()
+        internal
+        BroadcastAndWrite("provider")
+        returns (Provider provider)
+    {
         provider = _deployProvider(owner);
 
         addressToWrite = address(provider);
@@ -31,7 +37,7 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
         return provider;
     }
 
-    function _deployExchanger(Provider provider)
+    function _broadcastDeployExchanger(Provider provider)
         internal
         BroadcastAndWrite("exchanger")
         returns (Exchanger exchanger)
@@ -51,7 +57,7 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
         return exchanger;
     }
 
-    function _deploySynthImpl()
+    function _broadcastDeploySynthImpl()
         internal
         BroadcastAndWrite("synthImpl")
         returns (Synth synthImplementation)
@@ -63,7 +69,7 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
         return synthImplementation;
     }
 
-    function _deploySynths(
+    function _broadcastDeploySynths(
         Provider provider,
         Synth synthImplementation,
         string memory name,
@@ -76,9 +82,9 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
         return synth;
     }
 
-    function _deployDiaOracle(string[] memory keys, uint128[] memory prices)
+    function _broadcastDeployDiaOracle(string[] memory keys, uint128[] memory prices)
         internal
-        BroadcastAndWrite("diaOracle")
+        BroadcastAndWrite("mockDiaOracle")
         returns (DiaOracleMock _diaOracle)
     {
         _diaOracle = new DiaOracleMock();
@@ -89,7 +95,7 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
         return _diaOracle;
     }
 
-    function _deployDebtShares(Provider provider, Synth xusd)
+    function _broadcastDeployDebtShares(Provider provider, Synth xusd)
         internal
         BroadcastAndWrite("debtShares")
         returns (DebtShares debtShares)
@@ -103,7 +109,7 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
         return debtShares;
     }
 
-    function _deployPool(Provider provider, DebtShares debtShares)
+    function _broadcastDeployPool(Provider provider, DebtShares debtShares)
         internal
         BroadcastAndWrite("pool")
         returns (Pool pool)
@@ -127,7 +133,7 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
         return pool;
     }
 
-    function _deployDiaOracleAdapter(Provider provider, address _diaOracle)
+    function _broadcastDeployDiaOracleAdapter(Provider provider, address _diaOracle)
         internal
         BroadcastAndWrite("oracleAdapter")
         returns (DiaOracleAdapter oracleAdapter)
@@ -141,7 +147,7 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
         return oracleAdapter;
     }
 
-    function _deployPoolDataProvider(Provider provider)
+    function _broadcastDeployPoolDataProvider(Provider provider)
         internal
         BroadcastAndWrite("poolDataProvider")
         returns (PoolDataProvider poolDataProvider)
@@ -153,7 +159,7 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
         return poolDataProvider;
     }
 
-    function _deploySynthDataProvider(Provider provider)
+    function _broadcastDeploySynthDataProvider(Provider provider)
         internal
         BroadcastAndWrite("synthDataProvider")
         returns (SynthDataProvider synthDataProvider)
@@ -165,27 +171,107 @@ abstract contract DeployComponents is Script, Deploy, DeploymentSettings {
         return synthDataProvider;
     }
 
-    function _deployXUSD(Provider provider)
+    function _broadcastDeployXUSD(Synth synthImplementation, Provider provider)
         internal
         BroadcastAndWrite("xusd")
         returns (Synth xusd)
     {
-        xusd = _deployXUSD(address(provider), "XUSD", "XUSD");
-
-        provider.setXUSD(address(xusd));
+        xusd = _deployXUSD(address(synthImplementation), address(provider), "XUSD", "XUSD");
 
         addressToWrite = address(xusd);
 
         return xusd;
     }
 
+    function _setupOracleAdapter(DiaOracleAdapter _oracleAdapter) internal BroadcastAndWrite("") {
+        for (uint256 i = 0; i < assets.length; i++) {
+            _oracleAdapter.setKey(
+                address(assets[i].tokenAddress), string.concat(assets[i].symbol, "/USD")
+            );
+        }
+
+        for (uint256 i = 0; i < collaterals.length; i++) {
+            _oracleAdapter.setKey(
+                address(collaterals[i].tokenAddress), string.concat(collaterals[i].symbol, "/USD")
+            );
+        }
+    }
+
+    function _setupCollaterals(Pool _pool) internal BroadcastAndWrite("") {
+        for (uint256 i = 0; i < collaterals.length; i++) {
+            _pool.addCollateralToken(address(collaterals[i].tokenAddress));
+        }
+    }
+
+    function _broadcastDeployMarketImpl()
+        internal
+        BroadcastAndWrite("marketImpl")
+        returns (Market marketImpl)
+    {
+        marketImpl = new Market();
+
+        addressToWrite = address(marketImpl);
+
+        return marketImpl;
+    }
+
+    function _broadcastDeployMarketManager(Provider provider)
+        internal
+        BroadcastAndWrite("marketManager")
+        returns (MarketManager marketManager)
+    {
+        marketManager = _deployMarketManager(address(provider));
+
+        addressToWrite = address(marketManager);
+
+        provider.setMarketManager(address(marketManager));
+
+        return marketManager;
+    }
+
+    function _broadcastDeployMarket(
+        Provider provider,
+        address marketImpl,
+        bytes32 marketKey,
+        bytes32 baseAsset,
+        string memory symbol
+    ) internal BroadcastAndWrite(string.concat(symbol, "PerpMarket")) returns (Market market) {
+        market = _createMarket(address(marketImpl), address(provider), marketKey, baseAsset);
+
+        addressToWrite = address(market);
+
+        return market;
+    }
+
+    function _broadcastDeployWxfi() internal BroadcastAndWrite("wxfi") returns (WETH wxfi) {
+        wxfi = new WETH("Wrapped XFI", "WXFI");
+
+        addressToWrite = address(wxfi);
+
+        return wxfi;
+    }
+
+    function _broadcastDeployMulticall3()
+        internal
+        BroadcastAndWrite("multicall3")
+        returns (Multicall3 multicall3)
+    {
+        multicall3 = new Multicall3();
+
+        addressToWrite = address(multicall3);
+
+        return multicall3;
+    }
+
     modifier BroadcastAndWrite(string memory _name) {
-        vm.startBroadcast(privateKey);
+        vm.startBroadcast();
         _;
         vm.stopBroadcast();
 
         FileUtils fileUtils = new FileUtils();
 
-        fileUtils.writeContractAddress(chainId, addressToWrite, _name);
+        if (bytes(_name).length > 0) {
+            fileUtils.writeContractAddress(chainId, addressToWrite, _name);
+        }
     }
 }

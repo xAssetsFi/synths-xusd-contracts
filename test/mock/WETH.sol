@@ -4,9 +4,14 @@ pragma solidity ^0.8.20;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract WETH is IERC20 {
-    string public name = "Wrapped Ether";
-    string public symbol = "WETH";
+    string public name;
+    string public symbol;
     uint8 public decimals = 18;
+
+    constructor(string memory _name, string memory _symbol) {
+        name = _name;
+        symbol = _symbol;
+    }
 
     event Deposit(address indexed dst, uint256 wad);
     event Withdrawal(address indexed src, uint256 wad);

@@ -21,6 +21,7 @@ import {PoolDataProvider} from "src/misc/PoolDataProvider.sol";
 import {PerpDataProvider} from "src/misc/PerpDataProvider.sol";
 
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {console} from "forge-std/console.sol";
 
 contract Deploy {
     function _deployProvider(address _owner) internal returns (Provider) {
@@ -34,21 +35,18 @@ contract Deploy {
         return Provider(address(proxy));
     }
 
-    function _deployXUSD(address _provider, string memory _name, string memory _symbol)
-        internal
-        returns (Synth)
-    {
-        Synth synthImplementation = new Synth();
-
+    function _deployXUSD(
+        address _implementation,
+        address _provider,
+        string memory _name,
+        string memory _symbol
+    ) internal returns (Synth) {
         ERC1967Proxy proxy = new ERC1967Proxy(
-            address(synthImplementation),
-            abi.encodeWithSelector(
-                synthImplementation.initialize.selector, _provider, _name, _symbol
-            )
+            address(_implementation),
+            abi.encodeWithSelector(Synth.initialize.selector, _provider, _name, _symbol)
         );
 
         IProvider(_provider).setXUSD(address(proxy));
-        IExchanger(IProvider(_provider).exchanger()).addNewSynth(address(proxy));
 
         return Synth(address(proxy));
     }
@@ -146,6 +144,8 @@ contract Deploy {
                 _finishSwapDelay
             )
         );
+
+        Exchanger(address(proxy)).addNewSynth(address(IProvider(_provider).xusd()));
 
         return Exchanger(address(proxy));
     }

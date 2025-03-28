@@ -3,11 +3,12 @@ pragma solidity ^0.8.20;
 
 import {Script, console} from "forge-std/Script.sol";
 import {DeployApp} from "../Deploy/DeployApp.sol";
+import {WETH} from "test/mock/WETH.sol";
 
 contract DeployCrossfi is DeployApp {
     constructor() DeployApp(getSettings()) {}
 
-    function getSettings() internal pure returns (Settings memory) {
+    function getSettings() internal returns (Settings memory) {
         PoolSettings memory _poolSettings = PoolSettings({
             collateralRatio: 30000, // 300%
             liquidationRatio: 12000, // 120%
@@ -27,15 +28,6 @@ contract DeployCrossfi is DeployApp {
 
         Asset[] memory _assets = new Asset[](6);
 
-        // XFI/USD
-
-        // AMZN/USD
-        // NFLX/USD
-        // MSFT/USD
-        // NVDA/USD
-        // AAPL/USD
-        // XAU/USD
-
         _assets[0] = Asset(address(0), "AMZN", "Amazon", 0);
         _assets[1] = Asset(address(0), "NFLX", "Netflix", 0);
         _assets[2] = Asset(address(0), "MSFT", "Microsoft", 0);
@@ -43,7 +35,7 @@ contract DeployCrossfi is DeployApp {
         _assets[4] = Asset(address(0), "AAPL", "Apple", 0);
         _assets[5] = Asset(address(0), "XAU", "Gold", 0);
 
-        address _wxfi = 0xC537D12bd626B135B251cCa43283EFF69eC109c4;
+        address _wxfi = _deployWxfi();
 
         Asset[] memory _collaterals = new Asset[](1);
         _collaterals[0] = Asset(_wxfi, "XFI", "CrossFi", 0);
@@ -58,5 +50,15 @@ contract DeployCrossfi is DeployApp {
             assets: _assets,
             collaterals: _collaterals
         });
+    }
+
+    function _deployWxfi() internal returns (address) {
+        vm.startBroadcast();
+
+        address _wxfi = address(new WETH("Wrapped XFI", "WXFI"));
+
+        vm.stopBroadcast();
+
+        return _wxfi;
     }
 }

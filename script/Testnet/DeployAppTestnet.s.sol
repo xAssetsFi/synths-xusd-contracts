@@ -1,137 +1,139 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+// // SPDX-License-Identifier: MIT
+// pragma solidity ^0.8.20;
 
-import {Script, console} from "forge-std/Script.sol";
+// import {Script, console} from "forge-std/Script.sol";
 
-import {Fork} from "../../utils/Fork.sol";
-import {Deploy} from "../Deploy/Deploy.sol";
-import {Settings} from "./_Settings.sol";
-import {FileUtils} from "../../utils/FileHelpers.sol";
-import {DeployComponents} from "./_DeployComponents.sol";
+// import {Fork} from "../../utils/Fork.sol";
+// import {Deploy} from "../Deploy/Deploy.sol";
+// import {Settings} from "./_Settings.sol";
+// import {FileUtils} from "../../utils/FileHelpers.sol";
+// import {Broadcast} from "./_Broadcast.sol";
 
-import {Provider} from "src/Provider.sol";
-import {Exchanger} from "src/platforms/synths/Exchanger.sol";
-import {DiaOracleAdapter} from "src/DiaOracleAdapter.sol";
-import {Pool} from "src/Pool.sol";
-import {Synth} from "src/platforms/synths/Synth.sol";
-import {PoolDataProvider} from "src/misc/PoolDataProvider.sol";
-import {SynthDataProvider} from "src/misc/SynthDataProvider.sol";
-import {DebtShares} from "src/DebtShares.sol";
-import {DiaOracleMock} from "test/mock/DiaOracleMock.sol";
-import {MarketManager} from "src/platforms/perps/MarketManager.sol";
-import {MarketLib} from "src/lib/MarketLib.sol";
-import {Market} from "src/platforms/perps/Market.sol";
+// import {Provider} from "src/Provider.sol";
+// import {Exchanger} from "src/platforms/synths/Exchanger.sol";
+// import {DiaOracleAdapter} from "src/DiaOracleAdapter.sol";
+// import {Pool} from "src/Pool.sol";
+// import {Synth} from "src/platforms/synths/Synth.sol";
+// import {PoolDataProvider} from "src/misc/PoolDataProvider.sol";
+// import {SynthDataProvider} from "src/misc/SynthDataProvider.sol";
+// import {DebtShares} from "src/DebtShares.sol";
+// import {DiaOracleMock} from "test/mock/DiaOracleMock.sol";
+// import {MarketManager} from "src/platforms/perps/MarketManager.sol";
+// import {MarketLib} from "src/lib/MarketLib.sol";
+// import {Market} from "src/platforms/perps/Market.sol";
 
-contract DeployAppTestnet is Script, Fork, Settings, DeployComponents {
-    Provider provider;
-    Exchanger exchanger;
-    Synth xusd;
-    Synth synthImplementation;
-    DiaOracleMock diaOracle;
-    DebtShares debtShares;
-    Pool pool;
-    DiaOracleAdapter oracleAdapter;
-    PoolDataProvider poolDataProvider;
-    SynthDataProvider synthDataProvider;
+// contract DeployAppTestnet is Script, Fork, Settings, Broadcast {
+//     Provider provider;
+//     Exchanger exchanger;
+//     Synth xusd;
+//     Synth synthImplementation;
+//     DiaOracleMock diaOracle;
+//     DebtShares debtShares;
+//     Pool pool;
+//     DiaOracleAdapter oracleAdapter;
+//     PoolDataProvider poolDataProvider;
+//     SynthDataProvider synthDataProvider;
 
-    Market marketImpl;
-    MarketManager marketManager;
-    Market marketGold;
-    Market marketBtc;
+//     Market marketImpl;
+//     MarketManager marketManager;
+//     Market marketGold;
+//     Market marketBtc;
 
-    function setUp() public virtual {
-        _setupCollateralAndAssets();
+//     function setUp() public virtual {
+//         _setupCollateralAndAssets();
 
-        fork(chainId);
+//         fork(chainId);
 
-        _afterSetup();
-    }
+//         _afterSetup();
+//     }
 
-    function run() public {
-        provider = _deployProvider();
-        exchanger = _deployExchanger(provider);
-        xusd = _deployXUSD(provider);
+//     function run() public {
+//         provider = _deployProvider();
+//         exchanger = _deployExchanger(provider);
 
-        synthImplementation = _deploySynthImpl();
-        _createSynths(synthImplementation, provider);
+//         synthImplementation = _deploySynthImpl();
 
-        diaOracle = _deployAndSetupDiaOracle();
-        debtShares = _deployDebtShares(provider, xusd);
-        pool = _deployPool(provider, debtShares);
-        oracleAdapter = _deployDiaOracleAdapter(provider, diaOracle);
-        poolDataProvider = _deployPoolDataProvider(provider);
-        synthDataProvider = _deploySynthDataProvider(provider);
+//         xusd = _deployXUSD(synthImplementation, provider);
 
-        _setupOracleAdapter(oracleAdapter);
-        _setupCollaterals(pool);
+//         _createSynths(synthImplementation, provider);
 
-        marketImpl = _deployMarketImpl();
-        marketManager = _deployMarketManager(provider);
-        marketGold = _deployMarket(provider, address(marketImpl), "xXAU", "XAU", "marketGold");
-        marketBtc = _deployMarket(provider, address(marketImpl), "xBTC", "BTC", "marketBtc");
+//         diaOracle = _deployAndSetupDiaOracle();
+//         debtShares = _deployDebtShares(provider, xusd);
+//         pool = _deployPool(provider, debtShares);
+//         oracleAdapter = _deployDiaOracleAdapter(provider, diaOracle);
+//         poolDataProvider = _deployPoolDataProvider(provider);
+//         synthDataProvider = _deploySynthDataProvider(provider);
 
-        _afterDeploy();
-    }
+//         _setupOracleAdapter(oracleAdapter);
+//         _setupCollaterals(pool);
 
-    function _afterSetup() internal virtual {}
+//         marketImpl = _deployMarketImpl();
+//         marketManager = _deployMarketManager(provider);
+//         marketGold = _deployMarket(provider, address(marketImpl), "xXAU", "XAU", "marketGold");
+//         marketBtc = _deployMarket(provider, address(marketImpl), "xBTC", "BTC", "marketBtc");
 
-    function _afterDeploy() internal virtual {}
+//         _afterDeploy();
+//     }
 
-    function _deployAndSetupDiaOracle() internal returns (DiaOracleMock) {
-        string[] memory keys = new string[](assets.length + collaterals.length + 1);
-        uint128[] memory prices = new uint128[](assets.length + collaterals.length + 1);
+//     function _afterSetup() internal virtual {}
 
-        for (uint256 i = 0; i < assets.length; i++) {
-            string memory key = string.concat(assets[i].symbol, "/USD");
-            keys[i] = key;
-            prices[i] = assets[i].price;
-        }
+//     function _afterDeploy() internal virtual {}
 
-        for (uint256 i = 0; i < collaterals.length; i++) {
-            string memory key = string.concat(collaterals[i].symbol, "/USD");
-            keys[assets.length + i] = key;
-            prices[assets.length + i] = collaterals[i].price;
-        }
+//     function _deployAndSetupDiaOracle() internal returns (DiaOracleMock) {
+//         string[] memory keys = new string[](assets.length + collaterals.length + 1);
+//         uint128[] memory prices = new uint128[](assets.length + collaterals.length + 1);
 
-        return _deployDiaOracle(keys, prices);
-    }
+//         for (uint256 i = 0; i < assets.length; i++) {
+//             string memory key = string.concat(assets[i].symbol, "/USD");
+//             keys[i] = key;
+//             prices[i] = assets[i].price;
+//         }
 
-    function _setupOracleAdapter(DiaOracleAdapter _oracleAdapter) internal {
-        vm.startBroadcast(privateKey);
-        for (uint256 i = 0; i < assets.length; i++) {
-            _oracleAdapter.setKey(
-                address(assets[i].tokenAddress), string.concat(assets[i].symbol, "/USD")
-            );
-        }
+//         for (uint256 i = 0; i < collaterals.length; i++) {
+//             string memory key = string.concat(collaterals[i].symbol, "/USD");
+//             keys[assets.length + i] = key;
+//             prices[assets.length + i] = collaterals[i].price;
+//         }
 
-        for (uint256 i = 0; i < collaterals.length; i++) {
-            _oracleAdapter.setKey(
-                address(collaterals[i].tokenAddress), string.concat(collaterals[i].symbol, "/USD")
-            );
-        }
+//         return _deployDiaOracle(keys, prices);
+//     }
 
-        oracleAdapter.setKey(MarketLib.getAddress("XAU"), "XAU/USD");
-        oracleAdapter.setKey(MarketLib.getAddress("BTC"), "BTC/USD");
+//     function _setupOracleAdapter(DiaOracleAdapter _oracleAdapter) internal {
+//         vm.startBroadcast(privateKey);
+//         for (uint256 i = 0; i < assets.length; i++) {
+//             _oracleAdapter.setKey(
+//                 address(assets[i].tokenAddress), string.concat(assets[i].symbol, "/USD")
+//             );
+//         }
 
-        vm.stopBroadcast();
-    }
+//         for (uint256 i = 0; i < collaterals.length; i++) {
+//             _oracleAdapter.setKey(
+//                 address(collaterals[i].tokenAddress), string.concat(collaterals[i].symbol, "/USD")
+//             );
+//         }
 
-    function _setupCollaterals(Pool _pool) internal {
-        vm.startBroadcast(privateKey);
-        for (uint256 i = 0; i < collaterals.length; i++) {
-            _pool.addCollateralToken(address(collaterals[i].tokenAddress));
-        }
-        vm.stopBroadcast();
-    }
+//         oracleAdapter.setKey(MarketLib.getAddress("XAU"), "XAU/USD");
+//         oracleAdapter.setKey(MarketLib.getAddress("BTC"), "BTC/USD");
 
-    function _createSynths(Synth _synthImplementation, Provider _provider) internal {
-        for (uint256 i = 0; i < assets.length; i++) {
-            string memory symbol = string.concat("x", assets[i].symbol);
-            string memory name = string.concat("Synthetic ", assets[i].name);
+//         vm.stopBroadcast();
+//     }
 
-            Synth synth = _deploySynths(_provider, _synthImplementation, name, symbol);
+//     function _setupCollaterals(Pool _pool) internal {
+//         vm.startBroadcast(privateKey);
+//         for (uint256 i = 0; i < collaterals.length; i++) {
+//             _pool.addCollateralToken(address(collaterals[i].tokenAddress));
+//         }
+//         vm.stopBroadcast();
+//     }
 
-            assets[i].tokenAddress = address(synth);
-        }
-    }
-}
+//     function _createSynths(Synth _synthImplementation, Provider _provider) internal {
+//         for (uint256 i = 0; i < assets.length; i++) {
+//             string memory symbol = string.concat("x", assets[i].symbol);
+//             string memory name = string.concat("Synthetic ", assets[i].name);
+
+//             Synth synth = _deploySynths(_provider, _synthImplementation, name, symbol);
+
+//             assets[i].tokenAddress = address(synth);
+//         }
+//     }
+// }

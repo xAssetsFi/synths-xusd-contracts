@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {Script, console} from "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
 
 import {Fork} from "../../utils/Fork.sol";
-import {Deploy} from "../Deploy/Deploy.sol";
 import {DeploymentSettings} from "./_Settings.sol";
-import {FileUtils} from "../../utils/FileHelpers.sol";
-import {DeployComponents} from "./_DeployComponents.sol";
+import {Broadcast} from "./_Broadcast.sol";
 
 import {Provider} from "src/Provider.sol";
 import {Exchanger} from "src/platforms/synths/Exchanger.sol";
@@ -17,18 +15,30 @@ import {Synth} from "src/platforms/synths/Synth.sol";
 import {PoolDataProvider} from "src/misc/PoolDataProvider.sol";
 import {SynthDataProvider} from "src/misc/SynthDataProvider.sol";
 import {DebtShares} from "src/DebtShares.sol";
+import {DiaOracleMock} from "test/mock/DiaOracleMock.sol";
+import {Market} from "src/platforms/perps/Market.sol";
+import {MarketManager} from "src/platforms/perps/MarketManager.sol";
 
-abstract contract DeployApp is Script, Fork, DeploymentSettings, DeployComponents {
+abstract contract DeployApp is Script, Fork, DeploymentSettings, Broadcast {
+    /* ======== CORE ======== */
+
     Provider provider;
-    Exchanger exchanger;
-    Synth xusd;
     Synth synthImplementation;
-    address _diaOracle;
+    Synth xusd;
     DebtShares debtShares;
     Pool pool;
     DiaOracleAdapter oracleAdapter;
     PoolDataProvider poolDataProvider;
+
+    /* ======== SYNTH PLATFORM ======== */
+
+    Exchanger exchanger;
     SynthDataProvider synthDataProvider;
+
+    /* ======== PERPS ======== */
+
+    Market marketImpl;
+    MarketManager marketManager;
 
     constructor(Settings memory settings) DeploymentSettings(settings) {}
 
@@ -38,80 +48,56 @@ abstract contract DeployApp is Script, Fork, DeploymentSettings, DeployComponent
         _afterSetup();
     }
 
-    function run() public {
-        provider = _deployProvider();
-        exchanger = _deployExchanger(provider);
-        xusd = _deployXUSD(provider);
+    function run() public deployDiaOracleIfNeeded {
+        _deployCore();
 
-        synthImplementation = _deploySynthImpl();
-        _createSynths(synthImplementation, provider);
+        _deploySynthPlatform();
 
-        diaOracle = _getDiaOracle();
-        debtShares = _deployDebtShares(provider, xusd);
-        pool = _deployPool(provider, debtShares);
-        oracleAdapter = _deployDiaOracleAdapter(provider, diaOracle);
-        poolDataProvider = _deployPoolDataProvider(provider);
-        synthDataProvider = _deploySynthDataProvider(provider);
+        oracleAdapter = _deployAndSetupOracleAdapter();
 
-        _setupOracleAdapter(oracleAdapter);
-        _setupCollaterals(pool);
+        _deployPerps();
 
         _afterDeploy();
     }
 
-    function _afterSetup() internal virtual {}
+    /* ======== DEPLOY CORE ======== */
 
-    function _afterDeploy() internal virtual {}
+    function _deployCore() internal {
+        provider = _broadcastDeployProvider();
 
-    /// @dev override this function to deploy and setup DiaOracle
-    function _getDiaOracle() internal virtual returns (address) {
-        return address(diaOracle);
-    }
-    // function _deployAndSetupDiaOracle() internal returns (DiaOracle) {
-    //     string[] memory keys = new string[](
-    //         assets.length + collaterals.length + 1
-    //     );
-    //     uint256[] memory prices = new uint256[](
-    //         assets.length + collaterals.length + 1
-    //     );
+        synthImplementation = _broadcastDeploySynthImpl();
 
-    //     for (uint256 i = 0; i < assets.length; i++) {
-    //         string memory key = string.concat(assets[i].symbol, "/USD");
-    //         keys[i] = key;
-    //         prices[i] = assets[i].price;
-    //     }
+        xusd = _broadcastDeployXUSD(synthImplementation, provider);
+        debtShares = _broadcastDeployDebtShares(provider, xusd);
+        pool = _broadcastDeployPool(provider, debtShares);
 
-    //     for (uint256 i = 0; i < collaterals.length; i++) {
-    //         string memory key = string.concat(collaterals[i].symbol, "/USD");
-    //         keys[assets.length + i] = key;
-    //         prices[assets.length + i] = collaterals[i].price;
-    //     }
-
-    //     return _deployDiaOracle(keys, prices);
-    // }
-
-    function _setupOracleAdapter(DiaOracleAdapter _oracleAdapter) internal {
-        vm.startBroadcast(privateKey);
-        for (uint256 i = 0; i < assets.length; i++) {
-            _oracleAdapter.setKey(
-                address(assets[i].tokenAddress), string.concat(assets[i].symbol, "/USD")
-            );
-        }
-
-        for (uint256 i = 0; i < collaterals.length; i++) {
-            _oracleAdapter.setKey(
-                address(collaterals[i].tokenAddress), string.concat(collaterals[i].symbol, "/USD")
-            );
-        }
-        vm.stopBroadcast();
+        poolDataProvider = _broadcastDeployPoolDataProvider(provider);
     }
 
-    function _setupCollaterals(Pool _pool) internal {
-        vm.startBroadcast(privateKey);
-        for (uint256 i = 0; i < collaterals.length; i++) {
-            _pool.addCollateralToken(address(collaterals[i].tokenAddress));
-        }
-        vm.stopBroadcast();
+    function _deployAndSetupOracleAdapter() internal returns (DiaOracleAdapter) {
+        DiaOracleAdapter _oracleAdapter = _broadcastDeployDiaOracleAdapter(provider, diaOracle);
+
+        _setupOracleAdapter(_oracleAdapter);
+
+        return _oracleAdapter;
+    }
+
+    function _deployPoolAndSetupCollaterals() internal returns (Pool) {
+        Pool _pool = _broadcastDeployPool(provider, debtShares);
+
+        _setupCollaterals(_pool);
+
+        return _pool;
+    }
+
+    /* ======== DEPLOY SYNTH PLATFORM ======== */
+
+    function _deploySynthPlatform() internal {
+        exchanger = _broadcastDeployExchanger(provider);
+
+        _createSynths(synthImplementation, provider);
+
+        synthDataProvider = _broadcastDeploySynthDataProvider(provider);
     }
 
     function _createSynths(Synth _synthImplementation, Provider _provider) internal {
@@ -119,9 +105,61 @@ abstract contract DeployApp is Script, Fork, DeploymentSettings, DeployComponent
             string memory symbol = string.concat("x", assets[i].symbol);
             string memory name = string.concat("Synthetic ", assets[i].name);
 
-            Synth synth = _deploySynths(_provider, _synthImplementation, name, symbol);
+            Synth synth = _broadcastDeploySynths(_provider, _synthImplementation, name, symbol);
 
             assets[i].tokenAddress = address(synth);
         }
     }
+
+    function _deployPerps() internal {
+        marketImpl = _broadcastDeployMarketImpl();
+        marketManager = _broadcastDeployMarketManager(provider);
+
+        _createMarkets();
+    }
+
+    function _createMarkets() internal {
+        for (uint256 i = 0; i < assets.length; i++) {
+            bytes32 marketKey = bytes32(uint256(i + 1));
+            bytes32 baseAsset = bytes32(uint256(uint160(assets[i].tokenAddress)));
+            string memory symbol = assets[i].symbol;
+
+            Market market =
+                _broadcastDeployMarket(provider, address(marketImpl), marketKey, baseAsset, symbol);
+        }
+    }
+
+    /* ======== DIA ORACLE HANDLING ======== */
+
+    modifier deployDiaOracleIfNeeded() {
+        if (diaOracle == address(0)) {
+            diaOracle = address(_deployAndSetupDiaOracle());
+        }
+        _;
+    }
+
+    function _deployAndSetupDiaOracle() internal returns (DiaOracleMock) {
+        string[] memory keys = new string[](assets.length + collaterals.length + 1);
+        uint128[] memory prices = new uint128[](assets.length + collaterals.length + 1);
+
+        for (uint256 i = 0; i < assets.length; i++) {
+            string memory key = string.concat(assets[i].symbol, "/USD");
+            keys[i] = key;
+            prices[i] = uint128(assets[i].price);
+        }
+
+        for (uint256 i = 0; i < collaterals.length; i++) {
+            string memory key = string.concat(collaterals[i].symbol, "/USD");
+            keys[assets.length + i] = key;
+            prices[assets.length + i] = uint128(collaterals[i].price);
+        }
+
+        return _broadcastDeployDiaOracle(keys, prices);
+    }
+
+    /* ======== AFTERS FOR OVERRIDE ======== */
+
+    function _afterSetup() internal virtual {}
+
+    function _afterDeploy() internal virtual {}
 }

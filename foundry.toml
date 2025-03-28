@@ -52,3 +52,4 @@ mantle = { key = "verifyContract", chain = "mantle", url = "https://api.routesca
 metis = { key = "verifyContract", chain = "metis", url = "https://api.routescan.io/v2/network/mainnet/evm/1088/etherscan" }
 sei = { key = "verifyContract", chain = "1329", url = "https://seitrace.com/pacific-1/api" }
 crossfi = { key = "verifyContract", chain = "4158", url = "https://xfiscan.com/api/1.0/verify-contract/" }
+crossfi-testnet = { key = "verifyContract", chain = "4157", url = "https://xfiscan.com/api/1.0/verify-contract/" }
