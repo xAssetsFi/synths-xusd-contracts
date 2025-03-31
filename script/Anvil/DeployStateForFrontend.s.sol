@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {Script, console} from "forge-std/Script.sol";
 import {DeployApp} from "../Deploy/DeployApp.sol";
 import {WETH} from "test/mock/WETH.sol";
+import {Market} from "src/platforms/perps/Market.sol";
 
 contract DeployStateForFrontend is DeployApp {
     uint256 alicePk = 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d;
@@ -14,6 +15,41 @@ contract DeployStateForFrontend is DeployApp {
     function _afterDeploy() internal override {
         _mintXusd(alicePk);
         _mintXusd(bobPk);
+
+        _openPosition(alicePk, 300e18);
+        _openPosition(bobPk, -200e18);
+    }
+
+    function _openPosition(uint256 pk, int256 sizeInXusd) internal {
+        address[] memory markets = marketManager.getAllMarkets();
+
+        address market = markets[0];
+
+        uint256 price = Market(market).assetPrice();
+
+        (int256 margin, int256 size, uint256 desiredFillPrice) =
+            _getOpenPositionArgs(sizeInXusd, price);
+
+        vm.startBroadcast(pk);
+
+        Market(market).transferMarginAndModifyPosition(margin, size, desiredFillPrice);
+
+        vm.stopBroadcast();
+    }
+
+    function _getOpenPositionArgs(int256 sizeInXusd, uint256 price)
+        internal
+        returns (int256, int256, uint256)
+    {
+        int256 leverage = 2;
+
+        int256 margin = sizeInXusd > 0 ? sizeInXusd / leverage : -sizeInXusd / leverage;
+
+        int256 size = sizeInXusd * 1e18 / int256(price);
+
+        uint256 desiredFillPrice = sizeInXusd > 0 ? type(uint256).max : 0;
+
+        return (margin, size, desiredFillPrice);
     }
 
     function _mintXusd(uint256 pk) internal {

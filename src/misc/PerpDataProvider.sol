@@ -40,7 +40,7 @@ contract PerpDataProvider is IPerpDataProvider, ProviderKeeperUpgradeable {
 
             pd.position = market.getPerpPosition(account);
 
-            if (account != address(0) && pd.position.size != 0) {
+            if (account != address(0)) {
                 pd.notionalValue = market.notionalValue(pd.position.size, price);
                 pd.profitLoss = market.profitLoss(pd.position, price);
                 pd.accruedFunding = market.accruedFunding(pd.position, price);
