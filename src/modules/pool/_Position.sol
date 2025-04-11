@@ -79,8 +79,6 @@ abstract contract Position is Calculations {
 
         debtShares.mint(msg.sender, debtSharesToMint);
 
-        _checkHealthFactor(msg.sender, getMinHealthFactorForBorrow());
-
         ISynth xusd = provider().xusd();
 
         uint256 fee = Math.mulDiv(xusdAmount, loanFee, PRECISION);
@@ -89,6 +87,8 @@ abstract contract Position is Calculations {
         xusd.mint(feeReceiver, fee);
 
         _positions[msg.sender].lastBorrowTimestamp = block.timestamp;
+
+        _checkHealthFactor(msg.sender, getMinHealthFactorForBorrow());
 
         emit Borrow(msg.sender, xusdAmount, to, fee);
     }
