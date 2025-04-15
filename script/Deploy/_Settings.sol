@@ -52,6 +52,7 @@ abstract contract DeploymentSettings {
         wxfi = settings.wxfi;
         chainId = settings.chainId;
         owner = settings.owner;
+        diaOracle = settings.diaOracle;
 
         poolSettings = settings.poolSettings;
         exchangerSettings = settings.exchangerSettings;
