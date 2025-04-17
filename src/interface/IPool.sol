@@ -84,7 +84,8 @@ interface IPool {
     ) external;
 
     /// @notice Supply ETH to the protocol
-    /// @dev The ETH will be converted to WETH and then supplied to the protocol
+    /// @dev The ETH will be converted to WETH and then supplied to the protocol.
+    /// @dev User must first approve this contract to spend their WETH before calling this function.
     function supplyETH() external payable;
 
     /// @notice Withdraw ETH from the protocol
@@ -96,6 +97,7 @@ interface IPool {
     /// @param borrowAmount The amount of xusd to borrow
     /// @param maxDebtShares The maximum amount of debt shares user will receive
     /// @param borrowTo The address to receive the borrowed xusd
+    /// @dev User must first approve this contract to spend their WETH before calling this function.
     function supplyETHAndBorrow(uint256 borrowAmount, uint256 maxDebtShares, address borrowTo)
         external
         payable;
