@@ -246,6 +246,10 @@ interface IPool {
     /// @param period The cooldown period in seconds
     function setCooldownPeriod(uint32 period) external;
 
+    /// @notice Set the fee receiver
+    /// @param feeReceiver The address of the fee receiver
+    function setFeeReceiver(address feeReceiver) external;
+
     struct RatioAdjustment {
         uint32 targetRatio;
         uint32 startRatio;
@@ -284,6 +288,7 @@ interface IPool {
     event LoanFeeSet(uint256 fee);
     event StabilityFeeSet(uint256 fee);
     event CooldownPeriodSet(uint256 period);
+    event FeeReceiverSet(address feeReceiver);
 
     /* ======== Errors ======== */
 

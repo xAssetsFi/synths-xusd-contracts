@@ -22,7 +22,8 @@ contract Upgrade is Script, Fork {
         fork(chainId);
 
         // upgradePoolDataProvider();
-        upgradeDiaOracleAdapter();
+        // upgradeDiaOracleAdapter();
+        upgradePool();
 
         vm.stopBroadcast();
     }
@@ -45,7 +46,10 @@ contract Upgrade is Script, Fork {
     }
 
     function upgradePool() public {
-        address pool = 0x0e1BBf79BFC00bdFd41E64c10824De149D717Ccc;
+        address pool = fileUtils.readContractAddress(chainId, "pool");
+
+        vm.startBroadcast();
+
         address newPoolImpl = address(new Pool());
 
         Pool(payable(pool)).upgradeToAndCall(newPoolImpl, "");

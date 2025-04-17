@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import "test/Setup.sol";
 
 import {CalculationsInitParams} from "src/modules/pool/_Calculations.sol";
+import {Errors} from "src/common/_Errors.sol";
 
 contract SettersTest is Setup {
     address a = makeAddr("a");
@@ -162,5 +163,15 @@ contract SettersTest is Setup {
     function test_setCooldownPeriod() public {
         pool.setCooldownPeriod(u32);
         assertEq(pool.cooldownPeriod(), u32);
+    }
+
+    function test_setFeeReceiverInPool() public {
+        pool.setFeeReceiver(a);
+        assertEq(pool.feeReceiver(), a);
+    }
+
+    function test_setFeeReceiverInPool_revertIfZeroAddress() public {
+        vm.expectRevert(Errors.ZeroAddress.selector);
+        pool.setFeeReceiver(address(0));
     }
 }

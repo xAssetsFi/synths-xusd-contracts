@@ -196,6 +196,15 @@ contract Pool is WETHGateway {
         emit CooldownPeriodSet(period);
     }
 
+    function setFeeReceiver(address newFeeReceiver)
+        external
+        onlyOwner
+        noZeroAddress(newFeeReceiver)
+    {
+        feeReceiver = newFeeReceiver;
+        emit FeeReceiverSet(newFeeReceiver);
+    }
+
     /* ======== MODIFIERS ======== */
 
     modifier isCooldown(uint256 lastBorrowTimestamp) {
