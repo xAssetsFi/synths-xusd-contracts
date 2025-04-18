@@ -38,11 +38,10 @@ abstract contract PerpPosition is Calculations {
 
         PerpPosition memory position = _positions[msg.sender];
 
-        _updatePositionMargin(msg.sender, position, 0, price, marginDelta);
+        uint256 remainingMargin = _updatePositionMargin(msg.sender, position, 0, price, marginDelta);
 
         // emitMarginTransferred(sender, marginDelta);
-
-        emit MarginTransferred(msg.sender, marginDelta);
+        emit MarginTransferred(msg.sender, remainingMargin, marginDelta);
 
         // emitPositionModified(
         //     position.id,

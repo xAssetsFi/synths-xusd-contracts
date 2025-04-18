@@ -674,10 +674,10 @@ abstract contract Calculations is State {
         int256 orderSizeDelta,
         uint256 price,
         int256 marginDelta
-    ) internal {
+    ) internal returns (uint256 margin) {
         PerpPosition memory oldPosition = position;
         // Determine new margin, ensuring that the result is positive.
-        uint256 margin = _recomputeMarginWithDelta(oldPosition, price, marginDelta);
+        margin = _recomputeMarginWithDelta(oldPosition, price, marginDelta);
 
         // Update the debt correction.
         uint256 fundingIndex = _latestFundingIndex();
@@ -746,6 +746,7 @@ abstract contract Calculations is State {
         //     position.lastPrice,
         //     position.size
         // );
+        return margin;
     }
 
     function _trade(address sender, TradeParams memory params) internal /*notFlagged(sender)*/ {
@@ -841,8 +842,17 @@ abstract contract Calculations is State {
         //     position.size
         // );
 
+        uint256 fillPrice = params.fillPrice;
+
         emit PositionModified(
-            sender, params.sizeDelta, params.fillPrice, newPosition.size, fee, burnFee, ownerFee
+            sender,
+            params.sizeDelta,
+            fillPrice,
+            newPosition.size,
+            profitLoss(oldPosition, fillPrice),
+            fee,
+            burnFee,
+            ownerFee
         );
 
         // emit the modification event
