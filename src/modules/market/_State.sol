@@ -6,6 +6,8 @@ import {ProviderKeeperUpgradeable} from "src/common/_ProviderKeeperUpgradeable.s
 import {MarketLib} from "src/lib/MarketLib.sol";
 
 abstract contract State is ProviderKeeperUpgradeable, IMarket {
+    address public feeReceiver;
+
     // metadata
     bytes32 public marketKey;
     bytes32 public baseAsset;
@@ -31,8 +33,8 @@ abstract contract State is ProviderKeeperUpgradeable, IMarket {
     // extra
     uint256 public tradeFeeRatio; // Fee applied to all trades (e.g., 0.01e18 = 0.01%)
     uint256 public burnAtTradePartOfTradeFee; // Burn some amount (from total trade fee `base+taker+maker`) (e.g., 0.01e18 = 0.01% from total fee, not from trade volume)
-    uint256 public ownerPartOfTradeFee; // Some amount of fee (from total trade fee `base+taker+maker`) to be sent to the owner (e.g., 0.01e18 = 0.01%)
-    uint256 public ownerPartOfLiquidationFee; // Some amount of fee (from liquidation fee) to be sent to the owner (e.g., 0.01e18 = 0.01%)
+    uint256 public feeReceiverPartOfTradeFee; // Some amount of fee (from total trade fee `base+taker+maker`) to be sent to the feeReceiver (e.g., 0.01e18 = 0.01%)
+    uint256 public feeReceiverPartOfLiquidationFee; // Some amount of fee (from liquidation fee) to be sent to the feeReceiver (e.g., 0.01e18 = 0.01%)
 
     // derived parameters
     uint256 public marketSize; // Total of all positions perps in the market
@@ -70,8 +72,8 @@ abstract contract State is ProviderKeeperUpgradeable, IMarket {
 
         tradeFeeRatio = 0.0015e18;
         burnAtTradePartOfTradeFee = 0.2e18;
-        ownerPartOfTradeFee = 0.5e18;
-        ownerPartOfLiquidationFee = 0.2e18;
+        feeReceiverPartOfTradeFee = 0.5e18;
+        feeReceiverPartOfLiquidationFee = 0.2e18;
 
         fundingSequence.push(0);
     }
@@ -163,14 +165,22 @@ abstract contract State is ProviderKeeperUpgradeable, IMarket {
         burnAtTradePartOfTradeFee = newBurnAtTradePartOfTradeFee;
     }
 
-    function setOwnerPartOfTradeFee(uint256 newOwnerPartOfTradeFee) external onlyOwner {
-        ownerPartOfTradeFee = newOwnerPartOfTradeFee;
-    }
-
-    function setOwnerPartOfLiquidationFee(uint256 newOwnerPartOfLiquidationFee)
+    function setFeeReceiverPartOfTradeFee(uint256 newFeeReceiverPartOfTradeFee)
         external
         onlyOwner
     {
-        ownerPartOfLiquidationFee = newOwnerPartOfLiquidationFee;
+        feeReceiverPartOfTradeFee = newFeeReceiverPartOfTradeFee;
+    }
+
+    function setFeeReceiverPartOfLiquidationFee(uint256 newFeeReceiverPartOfLiquidationFee)
+        external
+        onlyOwner
+    {
+        feeReceiverPartOfLiquidationFee = newFeeReceiverPartOfLiquidationFee;
+    }
+
+    function setFeeReceiver(address newFeeReceiver) external onlyOwner {
+        feeReceiver = newFeeReceiver;
+        emit FeeReceiverUpdated(newFeeReceiver);
     }
 }

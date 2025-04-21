@@ -16,13 +16,13 @@ contract LiquidatePosition is MarketSetup {
         _setGoldPrice(oracleAdapter.getPrice(address(gold)) / 1000 * 760);
 
         address liquidator = vm.addr(0x666);
-        address owner = vm.addr(0x777);
+        address feeReceiver = vm.addr(0x777);
 
-        marketGold.transferOwnership(owner);
+        marketGold.setFeeReceiver(feeReceiver);
 
         uint256 balanceThisBefore = xusd.balanceOf(address(this));
         uint256 balanceLiquidatorBefore = xusd.balanceOf(liquidator);
-        uint256 balanceOwnerBefore = xusd.balanceOf(owner);
+        uint256 balanceFeeReceiverBefore = xusd.balanceOf(feeReceiver);
         uint256 balanceDebtSharesBefore = xusd.balanceOf(address(debtShares));
 
         vm.prank(liquidator);
@@ -30,12 +30,12 @@ contract LiquidatePosition is MarketSetup {
 
         uint256 balanceThisAfter = xusd.balanceOf(address(this));
         uint256 balanceLiquidatorAfter = xusd.balanceOf(liquidator);
-        uint256 balanceOwnerAfter = xusd.balanceOf(owner);
+        uint256 balanceFeeReceiverAfter = xusd.balanceOf(feeReceiver);
         uint256 balanceDebtSharesAfter = xusd.balanceOf(address(debtShares));
 
         assertEq(balanceThisAfter, balanceThisBefore);
         assertGt(balanceLiquidatorAfter, balanceLiquidatorBefore);
-        assertGt(balanceOwnerAfter, balanceOwnerBefore);
+        assertGt(balanceFeeReceiverAfter, balanceFeeReceiverBefore);
         assertGt(balanceDebtSharesAfter, balanceDebtSharesBefore);
 
         IMarket.PerpPosition memory position = marketGold.getPerpPosition(address(this));

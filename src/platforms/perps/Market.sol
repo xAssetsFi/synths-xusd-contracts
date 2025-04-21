@@ -7,6 +7,8 @@ import {SignedSafeMath} from "src/lib/SignedSafeMath.sol";
 
 import {IMarket} from "src/interface/platforms/perps/IMarket.sol";
 
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+
 contract Market is PerpPosition {
     using SignedSafeMath for int256;
 
@@ -16,6 +18,7 @@ contract Market is PerpPosition {
     {
         __ProviderKeeper_init(_provider);
         __State_init(_marketKey, _baseAsset);
+        feeReceiver = Ownable(_provider).owner();
 
         _registerInterface(type(IMarket).interfaceId);
     }

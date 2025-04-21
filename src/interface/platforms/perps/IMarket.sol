@@ -110,12 +110,13 @@ interface IMarket {
         int256 profitLoss,
         uint256 fee,
         uint256 burnFee,
-        uint256 ownerFee
+        uint256 feeReceiverFee
     );
     event PositionLiquidated(
-        address indexed user, uint256 oraclePrice, uint256 liquidationFee, uint256 ownerFee
+        address indexed user, uint256 oraclePrice, uint256 liquidationFee, uint256 feeReceiverFee
     );
     event ExecutorApproved(address user, address executor);
+    event FeeReceiverUpdated(address newFeeReceiver);
 
     error CanLiquidate();
     error CannotLiquidate();

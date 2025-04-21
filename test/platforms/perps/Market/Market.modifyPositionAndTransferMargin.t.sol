@@ -7,7 +7,7 @@ contract ModifyPositionAndTransferMargin is MarketSetup {
     function test_ShouldModifyPositionAndTransferMargin() public {
         int256 targetPositionSize = 1e18 / 4; // leverage = 1
 
-        marketGold.transferOwnership(address(0xdead));
+        marketGold.setFeeReceiver(address(0xdead));
 
         uint256 assetPriceBefore = marketGold.assetPrice();
 

@@ -8,10 +8,9 @@ import {IProvider} from "src/interface/IProvider.sol";
 import {ProviderKeeperUpgradeable} from "src/common/_ProviderKeeperUpgradeable.sol";
 
 import {ArrayLib} from "src/lib/ArrayLib.sol";
+import {MarketLib} from "src/lib/MarketLib.sol";
 
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
-
-import {MarketLib} from "src/lib/MarketLib.sol";
 
 contract MarketManager is ProviderKeeperUpgradeable, IMarketManager, IPlatform {
     using Clones for address;

@@ -22,20 +22,20 @@ contract ModifyPosition is MarketSetup {
                 )
         );
 
-        address owner = address(0x777);
-        marketGold.transferOwnership(owner);
+        address feeReceiver = address(0x777);
+        marketGold.setFeeReceiver(feeReceiver);
 
-        uint256 balanceOwnerBefore = xusd.balanceOf(owner);
+        uint256 balanceFeeReceiverBefore = xusd.balanceOf(feeReceiver);
         uint256 balanceDebtSharesBefore = xusd.balanceOf(address(debtShares));
 
         marketGold.modifyPosition(
             targetPositionSize, marketGold.fillPrice(targetPositionSize, marketGold.assetPrice())
         );
 
-        uint256 balanceOwnerAfter = xusd.balanceOf(owner);
+        uint256 balanceFeeReceiverAfter = xusd.balanceOf(feeReceiver);
         uint256 balanceDebtSharesAfter = xusd.balanceOf(address(debtShares));
 
-        assertGt(balanceOwnerAfter, balanceOwnerBefore);
+        assertGt(balanceFeeReceiverAfter, balanceFeeReceiverBefore);
         assertGt(balanceDebtSharesAfter, balanceDebtSharesBefore);
 
         assertEq(marketGold.getPerpPosition(address(this)).size, targetPositionSize);

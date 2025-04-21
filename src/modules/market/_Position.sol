@@ -109,10 +109,10 @@ abstract contract PerpPosition is Calculations {
 
         // Issue the reward to the flagger.
         // _manager().issueSUSD(marketState.positionFlagger(account), flaggerFee);
-        uint256 ownerFee =
-            uint256(int256(liquidationFee).multiplyDecimal(int256(ownerPartOfLiquidationFee)));
-        liquidationFee -= ownerFee;
-        provider().marketManager().mint(owner(), ownerFee);
+        uint256 feeReceiverFee =
+            uint256(int256(liquidationFee).multiplyDecimal(int256(feeReceiverPartOfLiquidationFee)));
+        liquidationFee -= feeReceiverFee;
+        provider().marketManager().mint(feeReceiver, feeReceiverFee);
         provider().marketManager().mint(msg.sender, liquidationFee);
 
         // Issue the reward to the liquidator (keeper).
@@ -129,7 +129,7 @@ abstract contract PerpPosition is Calculations {
         // marketState.deletePosition(account);
         delete _positions[positionOwner];
 
-        emit PositionLiquidated(positionOwner, price, liquidationFee, ownerFee);
+        emit PositionLiquidated(positionOwner, price, liquidationFee, feeReceiverFee);
 
         // Unflag position.
         // marketState.unflag(account);

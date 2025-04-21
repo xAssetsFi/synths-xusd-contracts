@@ -159,21 +159,21 @@ contract Setters is MarketSetup {
         marketGold.setBurnAtTradePartOfTradeFee(0.01e18);
     }
 
-    function test_setOwnerPartOfTradeFee() public {
-        marketGold.setOwnerPartOfTradeFee(0.01e18);
-        assertEq(marketGold.ownerPartOfTradeFee(), 0.01e18);
+    function test_setFeeReceiverPartOfTradeFee() public {
+        marketGold.setFeeReceiverPartOfTradeFee(0.01e18);
+        assertEq(marketGold.feeReceiverPartOfTradeFee(), 0.01e18);
 
         vm.prank(user);
         vm.expectRevert(onlyOwnerRevertData);
-        marketGold.setOwnerPartOfTradeFee(0.01e18);
+        marketGold.setFeeReceiverPartOfTradeFee(0.01e18);
     }
 
-    function test_setOwnerPartOfLiquidationFee() public {
-        marketGold.setOwnerPartOfLiquidationFee(0.01e18);
-        assertEq(marketGold.ownerPartOfLiquidationFee(), 0.01e18);
+    function test_setFeeReceiverPartOfLiquidationFee() public {
+        marketGold.setFeeReceiverPartOfLiquidationFee(0.01e18);
+        assertEq(marketGold.feeReceiverPartOfLiquidationFee(), 0.01e18);
 
         vm.prank(user);
         vm.expectRevert(onlyOwnerRevertData);
-        marketGold.setOwnerPartOfLiquidationFee(0.01e18);
+        marketGold.setFeeReceiverPartOfLiquidationFee(0.01e18);
     }
 }

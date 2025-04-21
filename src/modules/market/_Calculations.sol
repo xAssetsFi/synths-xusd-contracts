@@ -786,17 +786,17 @@ abstract contract Calculations is State {
             uint128(marketSize + int256(newPosition.size).abs() - int256(oldPosition.size).abs());
 
         uint256 burnFee;
-        uint256 ownerFee;
+        uint256 feeReceiverFee;
 
         // Send the fee to the fee pool
         if (fee > 0) {
             // _manager().payFee(fee);
             burnFee = uint256(int256(fee).multiplyDecimal(int256(burnAtTradePartOfTradeFee)));
-            ownerFee = uint256(int256(fee).multiplyDecimal(int256(ownerPartOfTradeFee)));
+            feeReceiverFee = uint256(int256(fee).multiplyDecimal(int256(feeReceiverPartOfTradeFee)));
 
-            fee -= burnFee + ownerFee;
+            fee -= burnFee + feeReceiverFee;
 
-            provider().marketManager().mint(owner(), ownerFee);
+            provider().marketManager().mint(feeReceiver, feeReceiverFee);
             // we don't need to actually burn the fee, we only need to decrease the minting amount
             provider().marketManager().addRewardOnDebtShares(fee);
         }
@@ -852,7 +852,7 @@ abstract contract Calculations is State {
             profitLoss(oldPosition, fillPrice),
             fee,
             burnFee,
-            ownerFee
+            feeReceiverFee
         );
 
         // emit the modification event
