@@ -55,6 +55,7 @@ contract PerpDataProvider is IPerpDataProvider, ProviderKeeperUpgradeable {
                 market: address(market),
                 asset: market.baseAsset(),
                 key: market.marketKey(),
+                minInitialMargin: market.minInitialMargin(),
                 price: price,
                 size: market.marketSize(),
                 skew: market.marketSkew(),

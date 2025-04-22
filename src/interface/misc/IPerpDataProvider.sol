@@ -13,6 +13,7 @@ interface IPerpDataProvider {
         address market;
         bytes32 asset;
         bytes32 key;
+        uint256 minInitialMargin;
         uint256 price;
         uint256 size;
         int256 skew;
