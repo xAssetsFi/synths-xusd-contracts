@@ -22,6 +22,7 @@ import {MarketManager} from "src/platforms/perps/MarketManager.sol";
 import {WETH} from "test/mock/WETH.sol";
 import {Multicall3} from "test/mock/Multicall3.sol";
 import {PerpDataProvider} from "src/misc/PerpDataProvider.sol";
+import {ERC20Token} from "test/mock/ERC20Token.sol";
 
 abstract contract Broadcast is Script, Deploy, DeploymentSettings {
     address private addressToWrite;
@@ -250,6 +251,18 @@ abstract contract Broadcast is Script, Deploy, DeploymentSettings {
         addressToWrite = address(wxfi);
 
         return wxfi;
+    }
+
+    function _broadcastDeployMockToken(string memory name, string memory symbol)
+        internal
+        BroadcastAndWrite(symbol)
+        returns (ERC20Token mockToken)
+    {
+        mockToken = new ERC20Token(name, symbol);
+
+        addressToWrite = address(mockToken);
+
+        return mockToken;
     }
 
     function _broadcastDeployMulticall3()
