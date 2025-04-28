@@ -768,7 +768,7 @@ abstract contract Calculations is State {
             ? params.fillPrice > params.desiredFillPrice
             : params.fillPrice < params.desiredFillPrice;
 
-        if (isError) revert PriceImpactToleranceExceeded();
+        if (isError) revert PriceImpactToleranceExceeded(params.fillPrice, params.desiredFillPrice);
 
         // Update the aggregated market size and skew with the new order size
         // marketState.setMarketSkew(

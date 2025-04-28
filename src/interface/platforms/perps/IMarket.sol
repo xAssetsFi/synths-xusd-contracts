@@ -126,6 +126,6 @@ interface IMarket {
     error NilOrder();
     error NoPositionOpen();
     error PriceTooVolatile();
-    error PriceImpactToleranceExceeded();
+    error PriceImpactToleranceExceeded(uint256 fillPrice, uint256 desiredFillPrice);
     error NotAllowedExecutor();
 }
