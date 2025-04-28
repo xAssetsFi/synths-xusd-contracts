@@ -394,12 +394,9 @@ abstract contract Calculations is State {
 
     function orderFee(TradeParams memory params) public view returns (uint256 fee) {
         // usd value of the difference in position (using the p/d-adjusted price).
-
         int256 notionalDiff = params.sizeDelta.multiplyDecimal(int256(params.fillPrice));
-
         // minimum fee to pay regardless (due to dynamic fees).
         uint256 baseFee = uint256(notionalDiff.signedAbs().multiplyDecimal(int256(tradeFeeRatio)));
-
         // does this trade keep the skew on one side?
         if (SignedSafeMath.sameSide(marketSkew + params.sizeDelta, marketSkew)) {
             // use a flat maker/taker fee for the entire size depending on whether the skew is increased or reduced.
@@ -418,16 +415,10 @@ abstract contract Calculations is State {
         // a different fee is applied on the proportion increasing the skew.
 
         // proportion of size that's on the other direction
-        int256 takerSize =
-            (marketSkew + params.sizeDelta).signedAbs().divideDecimal(params.sizeDelta);
-        int256 makerSize = int256(WAD) - takerSize;
-        uint256 takerFee = uint256(
-            notionalDiff.signedAbs().multiplyDecimal(takerSize).multiplyDecimal(int256(takerFee))
-        );
-        uint256 makerFee = uint256(
-            notionalDiff.signedAbs().multiplyDecimal(makerSize).multiplyDecimal(int256(makerFee))
-        );
-
+        uint256 takerSize = (marketSkew + params.sizeDelta).divideDecimal(params.sizeDelta).abs();
+        uint256 makerSize = WAD - takerSize;
+        uint256 takerFee = uint256(notionalDiff.abs() * takerSize / WAD * takerFee / WAD);
+        uint256 makerFee = uint256(notionalDiff.abs() * makerSize / WAD * makerFee / WAD);
         return baseFee + takerFee + makerFee;
     }
 
