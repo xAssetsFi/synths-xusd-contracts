@@ -41,7 +41,9 @@ abstract contract PerpPosition is Calculations {
         uint256 remainingMargin = _updatePositionMargin(msg.sender, position, 0, price, marginDelta);
 
         // emitMarginTransferred(sender, marginDelta);
-        emit MarginTransferred(msg.sender, remainingMargin, marginDelta);
+        emit MarginTransferred(
+            msg.sender, price, remainingMargin, marginDelta, profitLoss(position, price)
+        );
 
         // emitPositionModified(
         //     position.id,

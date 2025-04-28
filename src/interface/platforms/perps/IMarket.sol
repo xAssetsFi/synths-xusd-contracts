@@ -101,7 +101,13 @@ interface IMarket {
         view
         returns (PerpPosition memory newPosition, uint256 fee);
 
-    event MarginTransferred(address indexed user, uint256 remainingMargin, int256 marginDelta);
+    event MarginTransferred(
+        address indexed user,
+        uint256 price,
+        uint256 remainingMargin,
+        int256 marginDelta,
+        int256 profitLoss
+    );
     event PositionModified(
         address indexed user,
         int256 sizeDelta,
