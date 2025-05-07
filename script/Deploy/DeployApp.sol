@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Script} from "forge-std/Script.sol";
-
+import {console} from "forge-std/console.sol";
 import {Fork} from "../../utils/Fork.sol";
 import {DeploymentSettings} from "./_Settings.sol";
 import {Broadcast} from "./_Broadcast.sol";
@@ -71,7 +71,7 @@ abstract contract DeployApp is Script, Fork, DeploymentSettings, Broadcast {
 
         xusd = _broadcastDeployXUSD(synthImplementation, provider);
         debtShares = _broadcastDeployDebtShares(provider, xusd);
-        pool = _broadcastDeployPool(provider, debtShares);
+        pool = _deployPoolAndSetupCollaterals();
 
         poolDataProvider = _broadcastDeployPoolDataProvider(provider);
     }
