@@ -33,12 +33,30 @@ interface ISynthDataProvider {
         IExchanger.PendingSwap pendingSwap;
     }
 
-    function aggregateSynthData(address user) external view returns (AggregateSynthData memory);
+    /// @notice Aggregates data for all synths and swap parameters for a user.
+    /// @param user The address of the user to query.
+    /// @return data The aggregate data including all synths and swap parameters.
+    function aggregateSynthData(address user)
+        external
+        view
+        returns (AggregateSynthData memory data);
 
-    function synthData(address synth, address user) external view returns (SynthData memory);
+    /// @notice Returns detailed data for a specific synth and user.
+    /// @param synth The address of the synth token.
+    /// @param user The address of the user to query.
+    /// @return data The synth data including user-specific info.
+    function synthData(address synth, address user) external view returns (SynthData memory data);
 
-    function synthsData(address user) external view returns (SynthData[] memory);
+    /// @notice Returns data for all synths for a user.
+    /// @param user The address of the user to query.
+    /// @return data Array of synth data for each synth.
+    function synthsData(address user) external view returns (SynthData[] memory data);
 
+    /// @notice Previews the output amount for a synth-to-synth swap.
+    /// @param synthIn The address of the input synth token.
+    /// @param synthOut The address of the output synth token.
+    /// @param amountIn The amount of input synth to swap.
+    /// @return amountOut The estimated amount of output synth received.
     function previewSwap(address synthIn, address synthOut, uint256 amountIn)
         external
         view
