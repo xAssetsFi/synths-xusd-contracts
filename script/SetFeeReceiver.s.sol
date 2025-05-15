@@ -9,7 +9,7 @@ import {Exchanger} from "src/platforms/Synths/Exchanger.sol";
 
 contract SetFeeReceiver is Script, Fork {
     uint32 chainId = 4158;
-    address newFeeReceiver = 0x48157f21563aC5BD87b00d4E885bdb728aB619e2;
+    address newFeeReceiver = 0x5E9B0205A9f796b47A7FD7024C2b94D84041A494;
 
     FileUtils fileUtils;
 

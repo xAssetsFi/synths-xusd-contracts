@@ -5,14 +5,20 @@ import {Script, console} from "forge-std/Script.sol";
 import {Fork} from "../utils/Fork.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {FileUtils} from "../utils/FileHelpers.sol";
+import {console} from "forge-std/console.sol";
+
+struct Contract {
+    string keyInJson;
+    address contractAddress;
+}
 
 contract ChangeOwner is Script, Fork {
     uint32 chainId = 4158;
-    address newOwner = 0x48157f21563aC5BD87b00d4E885bdb728aB619e2;
+    address newOwner = 0x1ad157B53f81Db0f4A5588CE61F897e80CFd04b6;
 
     mapping(string keyInJson => bool) shouldSkipChangingOwner;
 
-    address[] contractsToChangeOwner;
+    Contract[] contractsToChangeOwner;
 
     FileUtils fileUtils = new FileUtils();
 
@@ -29,8 +35,13 @@ contract ChangeOwner is Script, Fork {
 
         vm.startBroadcast();
 
+        console.log("Changing owner of the following contracts:");
+
         for (uint256 i = 0; i < contractsToChangeOwner.length; i++) {
-            Ownable(contractsToChangeOwner[i]).transferOwnership(newOwner);
+            console.log("key", contractsToChangeOwner[i].keyInJson);
+            console.log("address", contractsToChangeOwner[i].contractAddress);
+            console.log("--------------------------------");
+            Ownable(contractsToChangeOwner[i].contractAddress).transferOwnership(newOwner);
         }
     }
 
@@ -44,7 +55,7 @@ contract ChangeOwner is Script, Fork {
         }
     }
 
-    function _extractKeysFromJson() internal returns (string[] memory) {
+    function _extractKeysFromJson() internal view returns (string[] memory) {
         string memory file = vm.readFile(fileUtils.pathToContracts());
 
         return vm.parseJsonKeys(file, string.concat(".", vm.toString(chainId)));
@@ -57,6 +68,9 @@ contract ChangeOwner is Script, Fork {
 
         address contractAddress = fileUtils.readContractAddress(chainId, key);
 
-        contractsToChangeOwner.push(contractAddress);
+        Contract memory contractToChangeOwner =
+            Contract({keyInJson: key, contractAddress: contractAddress});
+
+        contractsToChangeOwner.push(contractToChangeOwner);
     }
 }
